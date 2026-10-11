@@ -19,7 +19,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - `src/env.ts` validates environment variables with Zod (unit-tested).
   - Drizzle set up: `db` client in `src/server/db` (node-postgres pool, snake_case columns), `drizzle.config.ts`, `db:generate` / `db:migrate`.
   - First migration (`0000_profile_and_skills`): `profile`, `skill`, `profile_skill`, applied to the Neon `dev` branch. `profile.user_id` has no foreign key yet; it is added in M2.
-- **Next step:** PR `chore: run migrations on deploy` (Vercel build step or CI job), with an ADR explaining the choice.
+  - Production deploys run `db:migrate` before building (`vercel.json`); see [ADR 002](decisions/002-migrations-on-deploy.md).
+- **Next step:** PR `feat(db): add seed script` (port the prototype demo data into the `dev` database).
 
 ---
 
@@ -42,7 +43,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 - [x] `src/env.ts`: Zod-validated environment variables
 - [x] Drizzle setup (`src/server/db`), `drizzle.config.ts`, `db:generate` / `db:migrate` scripts
 - [x] First migration: `profile`, `skill`, `profile_skill`
-- [ ] Run migrations on deploy (Vercel build step or CI job), documented in an ADR
+- [x] Run migrations on deploy (Vercel build step or CI job), documented in an ADR
 - [ ] Seed script porting the prototype's demo data (`docs/reference/prototype/seed.ts`)
 
 ## M2 — Auth
