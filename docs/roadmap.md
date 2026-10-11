@@ -1,0 +1,86 @@
+# Roadmap
+
+Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, and keep **Current status** up to date.
+
+## Current status
+- **Milestone:** M0 — Foundations
+- **Done so far:**
+  - Next.js scaffolded with `create-next-app`.
+  - Project docs written.
+  - GitHub repo created; `main` protected by the `protect-main` ruleset (PR required, squash only, no force push/deletion).
+- **Next step:** PR #1 `chore: add prettier`.
+
+---
+
+## M0 — Foundations (deployed "hello world", no features)
+- [x] Scaffold Next.js (TS, Tailwind, ESLint, `src/`, App Router)
+- [x] Project docs: `docs/`, README
+- [x] Create GitHub repo `andyshin00/buddybuddy` (public) and push `main`
+- [x] Branch protection on `main` (require PR, no force push; required checks get added with CI)
+- [ ] PR: Prettier + `format` / `format:check` scripts, `.editorconfig`
+- [ ] PR: `typecheck` script; PR template (`.github/pull_request_template.md`)
+- [ ] PR: GitHub Actions CI: install → lint → typecheck → build; then mark it a required check in the ruleset
+- [ ] PR: Vitest set up + one trivial test; CI runs `test`
+- [ ] Connect Vercel: preview deploy per PR, production on `main`
+- [ ] Replace the starter page with a minimal BuddyBuddy placeholder (proves CD works)
+
+## M1 — Database
+- [ ] Neon project with `main` (prod) and `dev` branches; `.env.example`
+- [ ] `src/env.ts`: Zod-validated environment variables
+- [ ] Drizzle setup (`src/server/db`), `drizzle.config.ts`, `db:generate` / `db:migrate` scripts
+- [ ] First migration: `profile`, `skill`, `profile_skill`
+- [ ] Run migrations on deploy (Vercel build step or CI job), documented in an ADR
+- [ ] Seed script porting the prototype's demo data (`docs/reference/prototype/seed.ts`)
+
+## M2 — Auth
+- [ ] Better Auth + Drizzle adapter + auth tables migration; `/api/auth/[...all]` handler
+- [ ] GitHub OAuth sign-in page, session in the root layout, sign-out
+- [ ] Google OAuth + account linking
+- [ ] `getViewer()` helper; route protection in `proxy.ts`
+- [ ] Onboarding: choose a unique username → creates `profile`; redirect until done
+
+## M3 — Profiles
+- [ ] Public profile page `/u/[username]`
+- [ ] Edit own profile (Server Action + shared Zod schema; skills, experience, availability)
+- [ ] `profile_private` (real name, links, contact) + per-link public flags
+- [ ] `getPrivateProfile(viewer, userId)` authorization + unit tests
+
+## M4 — Posts
+- [ ] Schema: `post`, `post_role`, `post_skill` + migration
+- [ ] Create post (without the form builder) + post detail page
+- [ ] Edit / close / reopen (owner-only, with a test proving non-owners get 404)
+- [ ] Browse page with post cards + empty states
+- [ ] Filters via URL params (search, type, skills, max hours, duration) → SQL
+
+## M5 — Application form builder
+- [ ] Schema: `post_question` + migration
+- [ ] Question editor: add / remove / reorder, required, options; 5 question types
+- [ ] Question templates (port `docs/reference/prototype/templates.ts`)
+
+## M6 — Applying
+- [ ] Schema: `application` (answers jsonb snapshot, unique(post, applicant)) + migration
+- [ ] `getApplyBlocker` and answer validation in `rules.ts` + unit tests (port the prototype's `rules.ts`)
+- [ ] Apply page: role picker, dynamic questions (Zod schema built from questions), optional message
+- [ ] "My applications" page + withdraw pending
+
+## M7 — Reviewing
+- [ ] "My posts" page with applicant counts
+- [ ] Applicants page: skill match, availability, links, answers (owner-only)
+- [ ] Accept / reject / back to pending in a transaction; contact reveal on accept
+- [ ] Mark role filled; show collaborators on profiles ("projects joined")
+
+## M8 — Notifications
+- [ ] Schema: `notification` + migration; created inside the M6/M7 actions (same transaction)
+- [ ] Navbar badge + dropdown, mark as read
+
+## M9 — Hardening
+- [ ] Playwright E2E of the full flow (post → apply → accept → contact revealed) in CI with a Postgres service container
+- [ ] `loading.tsx` / `error.tsx` / `not-found.tsx` boundaries
+- [ ] Rate limiting on write actions
+- [ ] Accessibility pass (keyboard, labels, contrast)
+- [ ] Block / report, account deletion
+
+## M10 — Polish (owner's call)
+- [ ] Landing page
+- [ ] Animations (GSAP / Motion)
+- [ ] Dark mode
