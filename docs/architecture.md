@@ -23,6 +23,7 @@ src/
       migrations/               generated SQL — committed, never hand-edited
       seed.ts                   dev demo data
     auth.ts                     Better Auth config + getViewer()
+  proxy.ts                      redirects signed-out visitors (cookie check only)
   components/ui/                shadcn/ui components (we own this code)
   lib/                          small utils safe on client AND server
   env.ts                        Zod-validated environment variables

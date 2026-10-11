@@ -6,6 +6,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   integer,
@@ -24,6 +25,91 @@ export const experienceLevel = pgEnum("experience_level", [
   "advanced",
 ]);
 
+// ---------------------------------------------------------------------------
+// Sign-in tables, managed by Better Auth (src/server/auth.ts).
+// The table and column names must match what Better Auth expects, so don't
+// rename these. See https://www.better-auth.com/docs/concepts/database
+// ---------------------------------------------------------------------------
+
+// One row per person. Created on their first sign-in.
+export const user = pgTable("user", {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  email: text().notNull().unique(),
+  emailVerified: boolean().notNull().default(false),
+  image: text(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+// One row per signed-in browser. The cookie holds `token`.
+export const session = pgTable(
+  "session",
+  {
+    id: text().primaryKey(),
+    token: text().notNull().unique(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    ipAddress: text(),
+    userAgent: text(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("session_user_id_idx").on(t.userId)],
+);
+
+// One row per sign-in method a user has connected (GitHub, Google).
+// Two rows with the same userId = one person who linked both.
+export const account = pgTable(
+  "account",
+  {
+    id: text().primaryKey(),
+    accountId: text().notNull(), // the user's id at GitHub/Google
+    providerId: text().notNull(), // "github" or "google"
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text(),
+    refreshToken: text(),
+    idToken: text(),
+    accessTokenExpiresAt: timestamp({ withTimezone: true }),
+    refreshTokenExpiresAt: timestamp({ withTimezone: true }),
+    scope: text(),
+    password: text(), // unused: we only allow GitHub/Google sign-in
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("account_user_id_idx").on(t.userId)],
+);
+
+// Short-lived values Better Auth needs during sign-in.
+export const verification = pgTable(
+  "verification",
+  {
+    id: text().primaryKey(),
+    identifier: text().notNull(),
+    value: text().notNull(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("verification_identifier_idx").on(t.identifier)],
+);
+
 // Shared tag list used by profiles (and later posts).
 export const skill = pgTable(
   "skill",
@@ -39,9 +125,10 @@ export const skill = pgTable(
 export const profile = pgTable(
   "profile",
   {
-    // Better Auth's user id (text). The foreign key to `user` is added in M2,
-    // when Better Auth creates that table.
-    userId: text().primaryKey(),
+    // Same id as the `user` row. Deleting the user deletes their profile.
+    userId: text()
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
     username: text().notNull(),
     displayName: text(),
     headline: text(),

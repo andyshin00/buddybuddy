@@ -8,6 +8,13 @@
       "when": 1791703765082,
       "tag": "0000_profile_and_skills",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791760605081,
+      "tag": "0001_auth_tables",
+      "breakpoints": true
     }
   ]
 }

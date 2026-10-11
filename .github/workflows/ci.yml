@@ -20,6 +20,15 @@ jobs:
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: 1
+      # Placeholders so src/env.ts validation passes during the build.
+      # CI never connects to a database or signs anyone in.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-characters
+      BETTER_AUTH_URL: http://localhost:3000
+      GITHUB_CLIENT_ID: ci
+      GITHUB_CLIENT_SECRET: ci
+      GOOGLE_CLIENT_ID: ci
+      GOOGLE_CLIENT_SECRET: ci
     steps:
       - uses: actions/checkout@v7
 
