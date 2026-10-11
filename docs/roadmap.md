@@ -10,7 +10,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Project docs written.
   - GitHub repo created; `main` protected by the `protect-main` ruleset (PR required, squash only, no force push/deletion).
   - Prettier, `.editorconfig` and LF line endings (`.gitattributes`) set up.
-- **Next step:** PR `chore: add typecheck script and PR template`.
+  - `typecheck` script and PR template added.
+- **Next step:** PR `chore: add ci workflow` (GitHub Actions: install → lint → format:check → typecheck → build).
 
 ---
 
@@ -21,7 +22,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 - [x] Create GitHub repo `andyshin00/buddybuddy` (public) and push `main`
 - [x] Branch protection on `main` (require PR, no force push; required checks get added with CI)
 - [x] PR: Prettier + `format` / `format:check` scripts, `.editorconfig`
-- [ ] PR: `typecheck` script; PR template (`.github/pull_request_template.md`)
+- [x] PR: `typecheck` script; PR template (`.github/pull_request_template.md`)
 - [ ] PR: GitHub Actions CI: install → lint → typecheck → build; then mark it a required check in the ruleset
 - [ ] PR: Vitest set up + one trivial test; CI runs `test`
 - [ ] Connect Vercel: preview deploy per PR, production on `main`
