@@ -5,6 +5,7 @@ BuddyBuddy helps people find collaborators for side projects. It starts with CS 
 This spec carries over the original prototype requirements; the changes for v2 are listed at the end. The prototype's code is in [reference/prototype/](reference/prototype/).
 
 ## Users & profiles
+
 - Sign in with **GitHub or Google** (Better Auth). On first sign-in, the user picks a unique **username**.
 - A profile has:
   - username and an optional display name, with an initials avatar (or the OAuth avatar)
@@ -16,6 +17,7 @@ This spec carries over the original prototype requirements; the changes for v2 a
 - The profile shows the projects the user has **posted** and **joined** (accepted).
 
 ## Posts (projects)
+
 - Fields:
   - title, description
   - **post type:** "Have an idea, need builders" / "Open to ideating together" / "Existing project, need a role filled"
@@ -29,6 +31,7 @@ This spec carries over the original prototype requirements; the changes for v2 a
 - Only the owner can edit, close or reopen a post.
 
 ## Application form builder
+
 - **Question types:**
   - dropdown (single choice, poster-defined options)
   - multiple choice (checkboxes)
@@ -39,6 +42,7 @@ This spec carries over the original prototype requirements; the changes for v2 a
 - **Templates** the poster can insert and then edit: Web app, Mobile app, Game, General. They're kept in a data file so more are easy to add (see `reference/prototype/templates.ts`).
 
 ## Browsing
+
 - The home page lists **open** posts as cards. Each card shows:
   - title, post type badge, open roles, skill tags, time commitment
   - poster, applicant count, age
@@ -51,6 +55,7 @@ This spec carries over the original prototype requirements; the changes for v2 a
 - The viewer's own posts show a **"Your post"** badge. Clicking a card opens the post detail page.
 
 ## Applying
+
 - On a post page, a non-owner sees **Apply**. It's disabled, with the reason shown, if:
   - they already applied
   - the post is closed
@@ -64,6 +69,7 @@ This spec carries over the original prototype requirements; the changes for v2 a
 - **"My applications"** lists the user's applications and their status. A **pending** one can be withdrawn.
 
 ## Reviewing (poster)
+
 - **"My posts"** lists the user's posts with applicant and pending counts.
 - The **applicants view** for each post shows, for each applicant:
   - name, the role they applied for, availability, links
@@ -77,6 +83,7 @@ This spec carries over the original prototype requirements; the changes for v2 a
   - The poster can optionally mark that role as filled.
 
 ## Notifications
+
 - Created for:
   - a new application (to the poster)
   - a status change (to the applicant)
@@ -84,15 +91,17 @@ This spec carries over the original prototype requirements; the changes for v2 a
 - The navbar shows an unread badge. A dropdown lists notifications; opening it marks them read, and clicking one goes to the relevant page.
 
 ## UX basics
+
 - Clean, modern and readable. Works at laptop and phone widths.
 - Every list has an **empty state** (no posts match the filters, no applicants yet, etc.).
 
 ## Changes from the prototype (v2)
-| Prototype | v2 |
-|---|---|
-| Fake users + "Viewing as" switcher | Real accounts via GitHub / Google OAuth |
-| Real full names shown publicly | Public **username**; real name and links private until collaborating ([privacy.md](privacy.md)) |
-| localStorage | Neon Postgres via Drizzle, migrations |
-| Rules checked in the browser | Every read and write authorized on the server |
-| Answers stored by question id | Answers stored as a **snapshot** (question label + type + value), so editing a form later doesn't break old applications |
-| "Reset demo data" button | `npm run db:seed` against the dev database only |
+
+| Prototype                          | v2                                                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Fake users + "Viewing as" switcher | Real accounts via GitHub / Google OAuth                                                                                  |
+| Real full names shown publicly     | Public **username**; real name and links private until collaborating ([privacy.md](privacy.md))                          |
+| localStorage                       | Neon Postgres via Drizzle, migrations                                                                                    |
+| Rules checked in the browser       | Every read and write authorized on the server                                                                            |
+| Answers stored by question id      | Answers stored as a **snapshot** (question label + type + value), so editing a form later doesn't break old applications |
+| "Reset demo data" button           | `npm run db:seed` against the dev database only                                                                          |
