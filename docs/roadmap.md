@@ -11,7 +11,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - GitHub repo created; `main` protected by the `protect-main` ruleset (PR required, squash only, no force push/deletion).
   - Prettier, `.editorconfig` and LF line endings (`.gitattributes`) set up.
   - `typecheck` script and PR template added.
-- **Next step:** PR `chore: add ci workflow` (GitHub Actions: install → lint → format:check → typecheck → build).
+  - CI (GitHub Actions) runs lint, format, typecheck and build on every PR; `ci` is a required check.
+- **Next step:** PR `test: set up vitest` (Vitest + one trivial test; CI runs `test`).
 
 ---
 
@@ -23,7 +24,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 - [x] Branch protection on `main` (require PR, no force push; required checks get added with CI)
 - [x] PR: Prettier + `format` / `format:check` scripts, `.editorconfig`
 - [x] PR: `typecheck` script; PR template (`.github/pull_request_template.md`)
-- [ ] PR: GitHub Actions CI: install → lint → typecheck → build; then mark it a required check in the ruleset
+- [x] PR: GitHub Actions CI: install → lint → typecheck → build; then mark it a required check in the ruleset
 - [ ] PR: Vitest set up + one trivial test; CI runs `test`
 - [ ] Connect Vercel: preview deploy per PR, production on `main`
 - [ ] Replace the starter page with a minimal BuddyBuddy placeholder (proves CD works)
