@@ -16,7 +16,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Vercel connected: preview deploy per PR, production on merge to `main`.
   - Starter page replaced with a BuddyBuddy placeholder. **M0 complete.**
   - Neon project created (`main` = production, `dev` = local development); `.env.example` added.
-- **Next step:** PR `feat: add validated env` (`src/env.ts` with Zod).
+  - `src/env.ts` validates environment variables with Zod (unit-tested).
+- **Next step:** PR `chore: set up drizzle` (db client, `drizzle.config.ts`, `db:generate` / `db:migrate`).
 
 ---
 
@@ -36,7 +37,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 ## M1 — Database
 
 - [x] Neon project with `main` (prod) and `dev` branches; `.env.example`
-- [ ] `src/env.ts`: Zod-validated environment variables
+- [x] `src/env.ts`: Zod-validated environment variables
 - [ ] Drizzle setup (`src/server/db`), `drizzle.config.ts`, `db:generate` / `db:migrate` scripts
 - [ ] First migration: `profile`, `skill`, `profile_skill`
 - [ ] Run migrations on deploy (Vercel build step or CI job), documented in an ADR
