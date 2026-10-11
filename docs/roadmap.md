@@ -17,7 +17,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Starter page replaced with a BuddyBuddy placeholder. **M0 complete.**
   - Neon project created (`main` = production, `dev` = local development); `.env.example` added.
   - `src/env.ts` validates environment variables with Zod (unit-tested).
-- **Next step:** PR `chore: set up drizzle` (db client, `drizzle.config.ts`, `db:generate` / `db:migrate`).
+  - Drizzle set up: `db` client in `src/server/db` (node-postgres pool, snake_case columns), `drizzle.config.ts`, `db:generate` / `db:migrate`.
+- **Next step:** PR `feat(db): add profile and skill tables` (first generated migration: `profile`, `skill`, `profile_skill`).
 
 ---
 
@@ -38,7 +39,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 - [x] Neon project with `main` (prod) and `dev` branches; `.env.example`
 - [x] `src/env.ts`: Zod-validated environment variables
-- [ ] Drizzle setup (`src/server/db`), `drizzle.config.ts`, `db:generate` / `db:migrate` scripts
+- [x] Drizzle setup (`src/server/db`), `drizzle.config.ts`, `db:generate` / `db:migrate` scripts
 - [ ] First migration: `profile`, `skill`, `profile_skill`
 - [ ] Run migrations on deploy (Vercel build step or CI job), documented in an ADR
 - [ ] Seed script porting the prototype's demo data (`docs/reference/prototype/seed.ts`)
