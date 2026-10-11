@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M0 — Foundations
+- **Milestone:** M1 — Database
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -13,7 +13,9 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - `typecheck` script and PR template added.
   - CI (GitHub Actions) runs lint, format, typecheck and build on every PR; `ci` is a required check.
   - Vitest set up (`npm test`), and CI runs it.
-- **Next step:** Connect Vercel (dashboard setup, no PR), then PR `feat: add buddybuddy placeholder page`.
+  - Vercel connected: preview deploy per PR, production on merge to `main`.
+  - Starter page replaced with a BuddyBuddy placeholder. **M0 complete.**
+- **Next step:** Neon project (`main` + `dev` branches) and PR `chore: add env example`.
 
 ---
 
@@ -27,8 +29,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 - [x] PR: `typecheck` script; PR template (`.github/pull_request_template.md`)
 - [x] PR: GitHub Actions CI: install → lint → typecheck → build; then mark it a required check in the ruleset
 - [x] PR: Vitest set up + one trivial test; CI runs `test`
-- [ ] Connect Vercel: preview deploy per PR, production on `main`
-- [ ] Replace the starter page with a minimal BuddyBuddy placeholder (proves CD works)
+- [x] Connect Vercel: preview deploy per PR, production on `main`
+- [x] Replace the starter page with a minimal BuddyBuddy placeholder (proves CD works)
 
 ## M1 — Database
 
