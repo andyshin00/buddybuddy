@@ -4,16 +4,16 @@
 // It deletes the old demo users and ALL skills first, so only run it against the
 // `dev` database in .env.local, never production.
 //
-// Real names, links and contact details are left out on purpose (see
-// docs/privacy.md); they get their own table later. Posts and applications
-// are added here once their tables exist.
+// Real names, links and contact details go in profile_private (see
+// docs/privacy.md). Posts and applications are added here once their
+// tables exist.
 
 import "./load-env"; // must come first, see load-env.ts
 
 import { inArray } from "drizzle-orm";
 
 import { db } from "./index";
-import { profile, profileSkill, skill, user } from "./schema";
+import { profile, profilePrivate, profileSkill, skill, user } from "./schema";
 
 const demoProfiles = [
   {
@@ -104,6 +104,65 @@ const demoProfiles = [
   },
 ] as const;
 
+// Private details (docs/privacy.md). A few GitHub links are public, so you
+// can see the difference between "public" and "collaborators only".
+const demoPrivate = [
+  {
+    userId: "u-maya",
+    realName: "Maya Chen",
+    githubUrl: "https://github.com/mayachen",
+    linkedinUrl: "https://linkedin.com/in/mayachen",
+    portfolioUrl: "https://maya.dev",
+    githubPublic: true,
+    email: "maya.chen@example.edu",
+    discord: "mayac#2048",
+  },
+  {
+    userId: "u-jordan",
+    realName: "Jordan Okafor",
+    githubUrl: "https://github.com/jokafor",
+    linkedinUrl: "https://linkedin.com/in/jordanokafor",
+    githubPublic: true,
+    email: "jordan.okafor@example.com",
+    discord: "jokafor",
+  },
+  {
+    userId: "u-priya",
+    realName: "Priya Raman",
+    linkedinUrl: "https://linkedin.com/in/priyaraman",
+    portfolioUrl: "https://priyaraman.design",
+    portfolioPublic: true,
+    email: "priya@example.com",
+    discord: "priya.designs",
+  },
+  {
+    userId: "u-leo",
+    realName: "Leo Martins",
+    githubUrl: "https://github.com/leomartins",
+    linkedinUrl: "https://linkedin.com/in/leomartins",
+    email: "leo.martins@example.com",
+    discord: "leo_m",
+  },
+  {
+    userId: "u-sam",
+    realName: "Sam Rivera",
+    githubUrl: "https://github.com/samrivera",
+    email: "sam.rivera@example.edu",
+    discord: "samr_codes",
+  },
+  {
+    userId: "u-aiko",
+    realName: "Aiko Tanaka",
+    githubUrl: "https://github.com/aikotanaka",
+    linkedinUrl: "https://linkedin.com/in/aikotanaka",
+    portfolioUrl: "https://aiko.games",
+    githubPublic: true,
+    portfolioPublic: true,
+    email: "aiko@example.com",
+    discord: "aiko.tanaka",
+  },
+];
+
 async function seed() {
   // One transaction: either everything is saved, or nothing is.
   await db.transaction(async (tx) => {
@@ -133,7 +192,10 @@ async function seed() {
     // 4. The profiles themselves.
     await tx.insert(profile).values(demoProfiles.map((d) => d.profile));
 
-    // 5. Link each profile to its skills.
+    // 5. Their private details.
+    await tx.insert(profilePrivate).values(demoPrivate);
+
+    // 6. Link each profile to its skills.
     await tx.insert(profileSkill).values(
       demoProfiles.flatMap((d) =>
         d.skills.map((name) => ({

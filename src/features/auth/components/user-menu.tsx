@@ -20,7 +20,12 @@ export async function UserMenu() {
   return (
     <div className="flex items-center gap-4 text-sm">
       {viewer.username ? (
-        <span className="font-medium">@{viewer.username}</span>
+        <Link
+          href={`/u/${viewer.username}`}
+          className="font-medium hover:underline"
+        >
+          @{viewer.username}
+        </Link>
       ) : (
         <Link href="/onboarding" className="font-medium hover:underline">
           Finish setting up
