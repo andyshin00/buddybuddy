@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { requireProfile } from "@/server/auth";
 import { db } from "@/server/db";
-import { post, postRole, postSkill } from "@/server/db/schema";
+import { post, postQuestion, postRole, postSkill } from "@/server/db/schema";
 import { findOrCreateSkills } from "@/server/db/skills";
 
 import { getOwnPost } from "./queries";
@@ -38,6 +38,8 @@ function readPostForm(formData: FormData): PostFormInput {
     timezone: text("timezone"),
     // Ticked checkboxes with the same name arrive as a list.
     requiredLinks: formData.getAll("requiredLinks").map(String),
+    // The question editor puts the whole list in one hidden field, as JSON.
+    questions: text("questions"),
   } as PostFormInput;
 }
 
@@ -66,6 +68,21 @@ function postColumns(data: PostFormData) {
     timezone: data.timezone,
     requiredLinks: data.requiredLinks,
   };
+}
+
+// Replace a post's application questions, keeping the order given.
+// (Safe to replace: from M6, each application keeps its own copy of the
+// questions it answered.)
+async function saveQuestions(tx: Tx, postId: string, data: PostFormData) {
+  await tx.delete(postQuestion).where(eq(postQuestion.postId, postId));
+  if (data.questions.length === 0) return;
+  await tx.insert(postQuestion).values(
+    data.questions.map((question, position) => ({
+      postId,
+      position,
+      ...question,
+    })),
+  );
 }
 
 // Replace a post's skill list (required + nice-to-have).
@@ -114,6 +131,7 @@ export async function createPost(
       })),
     );
     await saveSkills(tx, created.id, data);
+    await saveQuestions(tx, created.id, data);
     return created.id;
   });
 
@@ -164,6 +182,7 @@ export async function updatePost(
     }
 
     await saveSkills(tx, postId, data);
+    await saveQuestions(tx, postId, data);
   });
 
   redirect(`/posts/${postId}`);

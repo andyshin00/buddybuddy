@@ -17,7 +17,14 @@ import { z } from "zod";
 
 import type { Viewer } from "@/server/auth";
 import { db } from "@/server/db";
-import { post, postRole, postSkill, profile, skill } from "@/server/db/schema";
+import {
+  post,
+  postQuestion,
+  postRole,
+  postSkill,
+  profile,
+  skill,
+} from "@/server/db/schema";
 
 import { canManagePost } from "./rules";
 import type { BrowseFilters } from "./schemas";
@@ -96,6 +103,17 @@ async function withRolesAndSkills(rows: PostRow[]) {
 
 export type PostDetail = Awaited<ReturnType<typeof withRolesAndSkills>>[number];
 
+// A single post also carries its application questions, in order.
+export type PostWithQuestions = PostDetail & {
+  questions: {
+    id: string;
+    type: (typeof postQuestion.$inferSelect)["type"];
+    label: string;
+    required: boolean;
+    options: string[];
+  }[];
+};
+
 // `%` and `_` are wildcards in LIKE; escape them so they match literally.
 function escapeLike(text: string) {
   return text.replace(/[\\%_]/g, "\\$&");
@@ -148,14 +166,25 @@ export async function searchPosts(
 export async function getPost(
   _viewer: Viewer,
   postId: string,
-): Promise<PostDetail | null> {
+): Promise<PostWithQuestions | null> {
   // A malformed id can't match anything; checking first avoids a database error.
   if (!z.uuid().safeParse(postId).success) return null;
 
   const [row] = await selectPosts(eq(post.id, postId), 1);
   if (!row) return null;
   const [detail] = await withRolesAndSkills([row]);
-  return detail;
+  const questions = await db
+    .select({
+      id: postQuestion.id,
+      type: postQuestion.type,
+      label: postQuestion.label,
+      required: postQuestion.required,
+      options: postQuestion.options,
+    })
+    .from(postQuestion)
+    .where(eq(postQuestion.postId, postId))
+    .orderBy(asc(postQuestion.position));
+  return { ...detail, questions };
 }
 
 // A post the viewer may edit/close/reopen, or null. Someone else's post
@@ -164,7 +193,7 @@ export async function getPost(
 export async function getOwnPost(
   viewer: Viewer,
   postId: string,
-): Promise<PostDetail | null> {
+): Promise<PostWithQuestions | null> {
   const found = await getPost(viewer, postId);
   if (!found || !canManagePost(viewer, found)) return null;
   return found;

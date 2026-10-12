@@ -10,6 +10,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -275,4 +276,33 @@ export const postSkill = pgTable(
     primaryKey({ columns: [t.postId, t.skillId] }),
     index("post_skill_skill_id_idx").on(t.skillId),
   ],
+);
+
+// ---------------------------------------------------------------------------
+// Application form: the questions a poster asks applicants.
+// ---------------------------------------------------------------------------
+
+export const questionType = pgEnum("question_type", [
+  "short",
+  "long",
+  "dropdown",
+  "multi",
+  "yesno",
+]);
+
+export const postQuestion = pgTable(
+  "post_question",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    postId: uuid()
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    position: integer().notNull(), // display order
+    type: questionType().notNull(),
+    label: text().notNull(),
+    required: boolean().notNull().default(false),
+    // Choices for "dropdown" and "multi"; an empty list for the other types.
+    options: jsonb().$type<string[]>().notNull().default([]),
+  },
+  (t) => [index("post_question_post_id_idx").on(t.postId)],
 );

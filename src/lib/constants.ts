@@ -64,3 +64,18 @@ export const DURATIONS = [
 ] as const;
 
 export type Duration = (typeof DURATIONS)[number]["value"];
+
+export const QUESTION_TYPES = [
+  { value: "short", label: "Short text" },
+  { value: "long", label: "Long text" },
+  { value: "dropdown", label: "Dropdown (pick one)" },
+  { value: "multi", label: "Checkboxes (pick any)" },
+  { value: "yesno", label: "Yes / No" },
+] as const;
+
+export type QuestionType = (typeof QUESTION_TYPES)[number]["value"];
+
+// Question types where the poster writes the choices.
+export function hasOptions(type: QuestionType): boolean {
+  return type === "dropdown" || type === "multi";
+}

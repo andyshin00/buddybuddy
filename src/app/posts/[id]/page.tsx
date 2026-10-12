@@ -7,7 +7,7 @@ import { PostTypeBadge } from "@/features/posts/components/post-type-badge";
 import { timeAgo } from "@/features/posts/components/time-ago";
 import { getPost } from "@/features/posts/queries";
 import { canManagePost } from "@/features/posts/rules";
-import { DURATIONS, LINKS } from "@/lib/constants";
+import { DURATIONS, LINKS, QUESTION_TYPES } from "@/lib/constants";
 import { requireProfile } from "@/server/auth";
 
 const buttonClass =
@@ -123,6 +123,28 @@ async function Post({ params }: Pick<PageProps<"/posts/[id]">, "params">) {
           </ul>
         </section>
       ))}
+
+      {post.questions.length > 0 && (
+        <section>
+          <h2 className="mb-2 font-medium">Application questions</h2>
+          <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm">
+            {post.questions.map((q) => (
+              <li key={q.id}>
+                {q.label}{" "}
+                <span className="text-zinc-500">
+                  ({QUESTION_TYPES.find((t) => t.value === q.type)?.label}
+                  {q.required ? ", required" : ""})
+                </span>
+                {q.options.length > 0 && (
+                  <span className="block text-zinc-500">
+                    Choices: {q.options.join(" · ")}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
     </article>
   );
 }
