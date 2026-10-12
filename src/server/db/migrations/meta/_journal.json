@@ -22,6 +22,13 @@
       "when": 1791765104876,
       "tag": "0002_profile_private",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791766421966,
+      "tag": "0003_posts",
+      "breakpoints": true
     }
   ]
 }

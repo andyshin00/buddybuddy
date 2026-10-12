@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { EXPERIENCE_LEVELS, TIMEZONES } from "@/lib/constants";
+import { commaList, emptyToNull, optionalText } from "@/lib/form";
 
 // Names that would be confusing or look official.
 const RESERVED_USERNAMES = new Set([
@@ -33,13 +34,6 @@ export const onboardingSchema = z.object({ username: usernameSchema });
 // Edit profile form. Shared by the form and the updateProfile Server Action.
 // ---------------------------------------------------------------------------
 
-// Form fields arrive as strings; an empty box means "not set" (null).
-const emptyToNull = (value: unknown) =>
-  typeof value === "string" && value.trim() === "" ? null : value;
-
-const optionalText = (max: number) =>
-  z.preprocess(emptyToNull, z.string().trim().max(max).nullable());
-
 // docs/privacy.md: only https:// links are accepted.
 const optionalHttpsUrl = z.preprocess(
   emptyToNull,
@@ -53,25 +47,7 @@ const optionalHttpsUrl = z.preprocess(
 );
 
 // "React, TypeScript, react" → ["React", "TypeScript"]
-const skillList = z
-  .string()
-  .transform((text) => {
-    const seen = new Set<string>();
-    return text
-      .split(",")
-      .map((name) => name.trim())
-      .filter((name) => {
-        const key = name.toLowerCase();
-        if (!name || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-  })
-  .pipe(
-    z
-      .array(z.string().max(30, "Each skill must be 30 characters or fewer."))
-      .max(20, "List up to 20 skills."),
-  );
+const skillList = commaList({ maxItems: 20, maxLength: 30, noun: "skill" });
 
 export const profileFormSchema = z.object({
   // Public

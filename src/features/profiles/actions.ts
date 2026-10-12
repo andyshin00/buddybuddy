@@ -1,18 +1,14 @@
 "use server";
 
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireProfile, requireViewer } from "@/server/auth";
 import { db } from "@/server/db";
 import { isUniqueViolation } from "@/server/db/errors";
-import {
-  profile,
-  profilePrivate,
-  profileSkill,
-  skill,
-} from "@/server/db/schema";
+import { profile, profilePrivate, profileSkill } from "@/server/db/schema";
+import { findOrCreateSkills } from "@/server/db/skills";
 
 import {
   onboardingSchema,
@@ -132,19 +128,13 @@ export async function updateProfile(
     // Skills: replace the whole list.
     await tx.delete(profileSkill).where(eq(profileSkill.userId, viewer.id));
     if (skillNames.length > 0) {
-      // Add skills nobody has used yet ("react" matches an existing "React").
-      await tx
-        .insert(skill)
-        .values(skillNames.map((name) => ({ name })))
-        .onConflictDoNothing();
-      const lowered = skillNames.map((name) => name.toLowerCase());
-      const rows = await tx
-        .select({ id: skill.id })
-        .from(skill)
-        .where(inArray(sql`lower(${skill.name})`, lowered));
-      await tx
-        .insert(profileSkill)
-        .values(rows.map((row) => ({ userId: viewer.id, skillId: row.id })));
+      const skillIds = await findOrCreateSkills(tx, skillNames);
+      await tx.insert(profileSkill).values(
+        [...skillIds.values()].map((skillId) => ({
+          userId: viewer.id,
+          skillId,
+        })),
+      );
     }
   });
 

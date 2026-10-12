@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M4 — Posts
+- **Milestone:** M5 — Application form builder
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -23,7 +23,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - `npm run db:seed` fills the `dev` database with the prototype's 6 demo profiles and their skills. **M1 complete.**
   - Sign-in with GitHub and Google (Better Auth, account linking), sign-out, `getViewer()` / `requireViewer()` / `requireProfile()`, `proxy.ts`, and username onboarding, all in one PR. How it works and setup: [auth.md](auth.md). **M2 complete.**
   - Profiles: page `/u/[username]`, edit form `/settings/profile` (one Server Action, one transaction), private details in `profile_private` shown only through `getPrivateProfile()` (rules unit-tested). How it works: [profiles.md](profiles.md). **M3 complete.**
-- **Next step:** M4 in one PR: post tables + migration, create / edit / close posts, browse page with filters.
+  - Posts: create / edit / close / reopen (owner-only, tested), post page, browse on `/` with URL filters turned into SQL, empty states, 8 demo posts. How it works: [posts.md](posts.md). **M4 complete.**
+- **Next step:** M5 in one PR: `post_question` table + migration, question editor in the post form, question templates.
 
 ---
 
@@ -66,11 +67,11 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M4 — Posts
 
-- [ ] Schema: `post`, `post_role`, `post_skill` + migration
-- [ ] Create post (without the form builder) + post detail page
-- [ ] Edit / close / reopen (owner-only, with a test proving non-owners get 404)
-- [ ] Browse page with post cards + empty states
-- [ ] Filters via URL params (search, type, skills, max hours, duration) → SQL
+- [x] Schema: `post`, `post_role`, `post_skill` + migration
+- [x] Create post (without the form builder) + post detail page
+- [x] Edit / close / reopen (owner-only, with a test proving non-owners get 404)
+- [x] Browse page with post cards + empty states
+- [x] Filters via URL params (search, type, skills, max hours, duration) → SQL
 
 ## M5 — Application form builder
 

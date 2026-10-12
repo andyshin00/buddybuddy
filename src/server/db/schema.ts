@@ -190,3 +190,89 @@ export const profileSkill = pgTable(
     index("profile_skill_skill_id_idx").on(t.skillId),
   ],
 );
+
+// ---------------------------------------------------------------------------
+// Posts (projects looking for collaborators)
+// ---------------------------------------------------------------------------
+
+export const postType = pgEnum("post_type", [
+  "need-builders",
+  "ideate",
+  "fill-role",
+]);
+export const postStatus = pgEnum("post_status", ["open", "closed"]);
+export const postDuration = pgEnum("post_duration", [
+  "weekend",
+  "2-weeks",
+  "1-month",
+  "3-months",
+  "3-plus-months",
+]);
+export const linkKey = pgEnum("link_key", ["github", "linkedin", "portfolio"]);
+export const skillKind = pgEnum("skill_kind", ["required", "nice"]);
+
+export const post = pgTable(
+  "post",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    ownerId: text()
+      .notNull()
+      .references(() => profile.userId, { onDelete: "cascade" }),
+    title: text().notNull(),
+    description: text().notNull(),
+    type: postType().notNull(),
+    status: postStatus().notNull().default("open"),
+    hoursPerWeek: integer().notNull(),
+    duration: postDuration().notNull(),
+    timezone: text(), // null = no preference
+    // Links an applicant must have on their profile (checked in M6).
+    requiredLinks: linkKey().array().notNull().default([]),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    index("post_owner_id_idx").on(t.ownerId),
+    // Browsing lists open posts, newest first.
+    index("post_status_created_at_idx").on(t.status, t.createdAt),
+    check(
+      "post_hours_per_week_range",
+      sql`${t.hoursPerWeek} between 1 and 168`,
+    ),
+  ],
+);
+
+// The roles a post needs, e.g. "Frontend", "Designer".
+export const postRole = pgTable(
+  "post_role",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    postId: uuid()
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    filled: boolean().notNull().default(false),
+    position: integer().notNull(), // display order
+  },
+  (t) => [index("post_role_post_id_idx").on(t.postId)],
+);
+
+// Many-to-many: the skills a post asks for, required or nice-to-have.
+export const postSkill = pgTable(
+  "post_skill",
+  {
+    postId: uuid()
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    skillId: uuid()
+      .notNull()
+      .references(() => skill.id, { onDelete: "cascade" }),
+    kind: skillKind().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postId, t.skillId] }),
+    index("post_skill_skill_id_idx").on(t.skillId),
+  ],
+);
