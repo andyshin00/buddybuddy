@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M5 — Application form builder
+- **Milestone:** M6 — Applying
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -24,7 +24,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Sign-in with GitHub and Google (Better Auth, account linking), sign-out, `getViewer()` / `requireViewer()` / `requireProfile()`, `proxy.ts`, and username onboarding, all in one PR. How it works and setup: [auth.md](auth.md). **M2 complete.**
   - Profiles: page `/u/[username]`, edit form `/settings/profile` (one Server Action, one transaction), private details in `profile_private` shown only through `getPrivateProfile()` (rules unit-tested). How it works: [profiles.md](profiles.md). **M3 complete.**
   - Posts: create / edit / close / reopen (owner-only, tested), post page, browse on `/` with URL filters turned into SQL, empty states, 8 demo posts. How it works: [posts.md](posts.md). **M4 complete.**
-- **Next step:** M5 in one PR: `post_question` table + migration, question editor in the post form, question templates.
+  - Application form builder: `post_question` table, question editor in the post form (add / remove / reorder, 5 types, required, choices), 4 templates. Explained in [posts.md](posts.md). **M5 complete.**
+- **Next step:** M6 in one PR: `application` table + migration, apply rules + tests, the apply page, "My applications" + withdraw.
 
 ---
 
@@ -75,9 +76,9 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M5 — Application form builder
 
-- [ ] Schema: `post_question` + migration
-- [ ] Question editor: add / remove / reorder, required, options; 5 question types
-- [ ] Question templates (port `docs/reference/prototype/templates.ts`)
+- [x] Schema: `post_question` + migration
+- [x] Question editor: add / remove / reorder, required, options; 5 question types
+- [x] Question templates (port `docs/reference/prototype/templates.ts`)
 
 ## M6 — Applying
 

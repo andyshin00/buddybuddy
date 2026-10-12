@@ -62,3 +62,31 @@ When the list is empty, the page says _why_ and what to do next: "No posts match
 ## Demo data
 
 `npm run db:seed` now adds the prototype's 8 posts (7 open, 1 closed), so the browse page has something to show.
+
+## Application questions (M5)
+
+A post can ask applicants up to 10 questions. They're saved in the `post_question` table, one row per question, with a `position` for the order.
+
+| Type       | The applicant…              | Needs choices? |
+| ---------- | --------------------------- | -------------- |
+| Short text | types one line              | no             |
+| Long text  | types a paragraph           | no             |
+| Dropdown   | picks one choice            | yes, 2–10      |
+| Checkboxes | ticks any number of choices | yes, 2–10      |
+| Yes / No   | picks yes or no             | no             |
+
+### How the editor works
+
+The question editor (`components/question-editor.tsx`) is the first part of the app that really needs JavaScript in the browser: adding, removing and moving questions happens instantly, without a round trip to the server. It keeps the list in React **state** (`useState`).
+
+When you submit the post form, the editor's list goes along as **one hidden field** called `questions`, containing the list as JSON text. The Server Action reads that field, and `questionsSchema` (in `schemas.ts`) turns it back into a list and checks it: a label for every question, 2–10 different choices for dropdowns and checkboxes, at most 10 questions. Error messages name the question number, like "Question 2: write the question."
+
+The server never trusts the editor. Someone could send any JSON they like, so the same checks run there.
+
+### Templates
+
+`templates.ts` holds four ready-made question sets (Web app, Mobile app, Game, General), ported from the prototype. **Insert template** adds a set's questions to the end of your list, and then you edit them like any others. To add a template, add an object to `QUESTION_TEMPLATES`; a test checks that every template passes the same rules as a poster's own questions.
+
+### Editing questions later
+
+Saving a post replaces its whole question list. That's safe because, from M6, each application will keep its own copy of the questions it answered (see "Why answers are a jsonb snapshot" in `architecture.md`).

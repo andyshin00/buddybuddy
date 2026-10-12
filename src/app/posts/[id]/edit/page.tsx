@@ -47,6 +47,14 @@ async function EditPost({
         duration: post.duration,
         timezone: post.timezone ?? "",
         requiredLinks: post.requiredLinks,
+        questions: JSON.stringify(
+          post.questions.map(({ type, label, required, options }) => ({
+            type,
+            label,
+            required,
+            options,
+          })),
+        ),
       }}
     />
   );

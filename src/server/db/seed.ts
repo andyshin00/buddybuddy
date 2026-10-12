@@ -12,11 +12,16 @@ import "./load-env"; // must come first, see load-env.ts
 
 import { inArray } from "drizzle-orm";
 
+import {
+  QUESTION_TEMPLATES,
+  type QuestionDraft,
+} from "@/features/posts/templates";
 import type { Duration, LinkKey, PostType } from "@/lib/constants";
 
 import { db } from "./index";
 import {
   post,
+  postQuestion,
   postRole,
   postSkill,
   profile,
@@ -175,6 +180,14 @@ const demoPrivate = [
   },
 ];
 
+const LEVELS = ["None", "Some", "Comfortable", "Expert"];
+
+// A template's questions, plus any extra ones.
+function fromTemplate(id: string, extra: QuestionDraft[] = []) {
+  const template = QUESTION_TEMPLATES.find((t) => t.id === id)!;
+  return [...template.questions, ...extra];
+}
+
 // Posts from the prototype. `daysAgo` sets how old each one looks.
 const demoPosts: {
   ownerId: string;
@@ -189,6 +202,7 @@ const demoPosts: {
   duration: Duration;
   timezone?: string;
   requiredLinks?: LinkKey[];
+  questions: QuestionDraft[];
   daysAgo: number;
 }[] = [
   {
@@ -203,6 +217,14 @@ const demoPosts: {
     hoursPerWeek: 6,
     duration: "1-month",
     timezone: "UTC-8 (Pacific)",
+    questions: fromTemplate("web-app", [
+      {
+        type: "short",
+        label: "Which course would you want a study room for first?",
+        required: false,
+        options: [],
+      },
+    ]),
     daysAgo: 3,
   },
   {
@@ -217,6 +239,26 @@ const demoPosts: {
     hoursPerWeek: 5,
     duration: "3-plus-months",
     requiredLinks: ["github"],
+    questions: [
+      {
+        type: "dropdown",
+        label: "How much TypeScript experience do you have?",
+        required: true,
+        options: LEVELS,
+      },
+      {
+        type: "yesno",
+        label: "Have you used a charting library (Recharts, D3, Chart.js)?",
+        required: true,
+        options: [],
+      },
+      {
+        type: "long",
+        label: "Skim our open issues — which would you pick up first, and why?",
+        required: true,
+        options: [],
+      },
+    ],
     daysAgo: 6,
   },
   {
@@ -230,6 +272,33 @@ const demoPosts: {
     niceSkills: ["UX research", "React"],
     hoursPerWeek: 3,
     duration: "2-weeks",
+    questions: [
+      {
+        type: "multi",
+        label: "Which problem areas resonate with you?",
+        required: true,
+        options: [
+          "Focus & time blindness",
+          "Note-taking",
+          "Group work",
+          "Exam anxiety",
+          "Something else",
+        ],
+      },
+      {
+        type: "long",
+        label:
+          "Any lived experience or research background here? (Share only what you’re comfortable with.)",
+        required: false,
+        options: [],
+      },
+      {
+        type: "dropdown",
+        label: "How do you prefer to ideate?",
+        required: true,
+        options: ["Async in a shared doc", "Weekly video call", "Discord chat"],
+      },
+    ],
     daysAgo: 2,
   },
   {
@@ -246,6 +315,32 @@ const demoPosts: {
     duration: "3-months",
     timezone: "UTC+1 (Central Europe)",
     requiredLinks: ["github"],
+    questions: [
+      {
+        type: "dropdown",
+        label: "How much PyTorch experience do you have?",
+        required: true,
+        options: LEVELS,
+      },
+      {
+        type: "yesno",
+        label: "Have you trained or fine-tuned a model before?",
+        required: true,
+        options: [],
+      },
+      {
+        type: "short",
+        label: "Do you have GPU access? (local card or cloud)",
+        required: false,
+        options: [],
+      },
+      {
+        type: "long",
+        label: "Why does this project interest you?",
+        required: true,
+        options: [],
+      },
+    ],
     daysAgo: 9,
   },
   {
@@ -263,6 +358,7 @@ const demoPosts: {
     niceSkills: ["Pixel art"],
     hoursPerWeek: 20,
     duration: "weekend",
+    questions: fromTemplate("game"),
     daysAgo: 1.2,
   },
   {
@@ -277,6 +373,7 @@ const demoPosts: {
     hoursPerWeek: 4,
     duration: "1-month",
     timezone: "UTC-5 (Eastern)",
+    questions: fromTemplate("general"),
     daysAgo: 4,
   },
   {
@@ -291,6 +388,7 @@ const demoPosts: {
     hoursPerWeek: 6,
     duration: "3-plus-months",
     requiredLinks: ["github", "linkedin"],
+    questions: fromTemplate("mobile-app"),
     daysAgo: 12,
   },
   {
@@ -305,6 +403,7 @@ const demoPosts: {
     niceSkills: ["Next.js"],
     hoursPerWeek: 4,
     duration: "weekend",
+    questions: fromTemplate("web-app"),
     daysAgo: 30,
   },
 ];
@@ -351,9 +450,16 @@ async function seed() {
       ),
     );
 
-    // 7. Posts, with their roles and skills.
+    // 7. Posts, with their roles, skills and application questions.
     for (const demo of demoPosts) {
-      const { roles, requiredSkills, niceSkills, daysAgo, ...columns } = demo;
+      const {
+        roles,
+        requiredSkills,
+        niceSkills,
+        questions,
+        daysAgo,
+        ...columns
+      } = demo;
       const createdAt = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
       const [created] = await tx
         .insert(post)
@@ -364,6 +470,13 @@ async function seed() {
           postId: created.id,
           position,
           ...role,
+        })),
+      );
+      await tx.insert(postQuestion).values(
+        questions.map((question, position) => ({
+          postId: created.id,
+          position,
+          ...question,
         })),
       );
       const all = [...requiredSkills, ...niceSkills];
