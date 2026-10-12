@@ -306,3 +306,56 @@ export const postQuestion = pgTable(
   },
   (t) => [index("post_question_post_id_idx").on(t.postId)],
 );
+
+// ---------------------------------------------------------------------------
+// Applications: someone asking to join a post in a role.
+// ---------------------------------------------------------------------------
+
+export const applicationStatus = pgEnum("application_status", [
+  "pending",
+  "accepted",
+  "rejected",
+]);
+
+// One answer, saved together with the question as it was when the person
+// applied. If the poster edits their questions later, old applications still
+// read correctly (docs/architecture.md: "Why answers are a jsonb snapshot").
+export type AnswerSnapshot = {
+  questionId: string;
+  label: string;
+  type: (typeof questionType.enumValues)[number];
+  value: string | string[];
+};
+
+export const application = pgTable(
+  "application",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    postId: uuid()
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    applicantId: text()
+      .notNull()
+      .references(() => profile.userId, { onDelete: "cascade" }),
+    // The role applied for. If the poster later removes that role, the link
+    // is cleared but `roleName` still says what it was.
+    roleId: uuid().references(() => postRole.id, { onDelete: "set null" }),
+    roleName: text().notNull(),
+    status: applicationStatus().notNull().default("pending"),
+    message: text(),
+    answers: jsonb().$type<AnswerSnapshot[]>().notNull().default([]),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    // One application per person per post.
+    uniqueIndex("application_post_applicant_unique").on(
+      t.postId,
+      t.applicantId,
+    ),
+    index("application_applicant_id_idx").on(t.applicantId),
+  ],
+);

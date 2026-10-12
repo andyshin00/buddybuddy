@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M6 — Applying
+- **Milestone:** M7 — Reviewing
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -25,7 +25,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Profiles: page `/u/[username]`, edit form `/settings/profile` (one Server Action, one transaction), private details in `profile_private` shown only through `getPrivateProfile()` (rules unit-tested). How it works: [profiles.md](profiles.md). **M3 complete.**
   - Posts: create / edit / close / reopen (owner-only, tested), post page, browse on `/` with URL filters turned into SQL, empty states, 8 demo posts. How it works: [posts.md](posts.md). **M4 complete.**
   - Application form builder: `post_question` table, question editor in the post form (add / remove / reorder, 5 types, required, choices), 4 templates. Explained in [posts.md](posts.md). **M5 complete.**
-- **Next step:** M6 in one PR: `application` table + migration, apply rules + tests, the apply page, "My applications" + withdraw.
+  - Applying: `application` table (answers saved with a copy of each question), `getApplyBlocker` + answer schema built from the questions (tested), apply page, "My applications" + withdraw, 10 demo applications. How it works: [applications.md](applications.md). **M6 complete.**
+- **Next step:** M7 in one PR: "My posts", the applicants page, accept / reject (with contact reveal), mark roles filled, "projects joined" on profiles.
 
 ---
 
@@ -82,10 +83,10 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M6 — Applying
 
-- [ ] Schema: `application` (answers jsonb snapshot, unique(post, applicant)) + migration
-- [ ] `getApplyBlocker` and answer validation in `rules.ts` + unit tests (port the prototype's `rules.ts`)
-- [ ] Apply page: role picker, dynamic questions (Zod schema built from questions), optional message
-- [ ] "My applications" page + withdraw pending
+- [x] Schema: `application` (answers jsonb snapshot, unique(post, applicant)) + migration
+- [x] `getApplyBlocker` and answer validation in `rules.ts` + unit tests (port the prototype's `rules.ts`)
+- [x] Apply page: role picker, dynamic questions (Zod schema built from questions), optional message
+- [x] "My applications" page + withdraw pending
 
 ## M7 — Reviewing
 

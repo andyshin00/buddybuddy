@@ -16,10 +16,16 @@ import {
   QUESTION_TEMPLATES,
   type QuestionDraft,
 } from "@/features/posts/templates";
-import type { Duration, LinkKey, PostType } from "@/lib/constants";
+import type {
+  Duration,
+  LinkKey,
+  PostType,
+  QuestionType,
+} from "@/lib/constants";
 
 import { db } from "./index";
 import {
+  application,
   post,
   postQuestion,
   postRole,
@@ -408,6 +414,159 @@ const demoPosts: {
   },
 ];
 
+// Applications from the prototype. `post` is the start of the post's title;
+// `values` are the answers in question order.
+const demoApplications: {
+  post: string;
+  applicant: string;
+  role: string;
+  status: "pending" | "accepted" | "rejected";
+  values: (string | string[])[];
+  message: string;
+  daysAgo: number;
+}[] = [
+  {
+    post: "StudySync",
+    applicant: "u-sam",
+    role: "Backend",
+    status: "pending",
+    daysAgo: 0.2,
+    values: [
+      "Some",
+      ["None yet"],
+      "No",
+      "I just finished data structures and want to learn how real backends work. I use study groups constantly, so I’d actually use this.",
+      "CS 1332",
+    ],
+    message:
+      "I’m a beginner, but I have a lot of time this semester and I learn fast!",
+  },
+  {
+    post: "StudySync",
+    applicant: "u-priya",
+    role: "Designer",
+    status: "accepted",
+    daysAgo: 2.5,
+    values: [
+      "Comfortable",
+      ["React"],
+      "Yes",
+      "I’ve designed two study tools for class projects and would love to work on something that ships.",
+      "Intro to Algorithms",
+    ],
+    message:
+      "Loved the prototype — happy to do a quick audit of the room flow this week.",
+  },
+  {
+    post: "Ledgerline",
+    applicant: "u-maya",
+    role: "Frontend",
+    status: "pending",
+    daysAgo: 1,
+    values: [
+      "Comfortable",
+      "Yes",
+      "The budget-breakdown chart issue — it’s the most visible feature and I’ve built a similar chart with Recharts.",
+    ],
+    message: "",
+  },
+  {
+    post: "Ledgerline",
+    applicant: "u-leo",
+    role: "Frontend",
+    status: "rejected",
+    daysAgo: 5,
+    values: ["Some", "Yes", "CSV export — I work with CSVs all day."],
+    message: "Mostly a data person, but keen to learn React.",
+  },
+  {
+    post: "Sprite Forge",
+    applicant: "u-maya",
+    role: "Frontend",
+    status: "accepted",
+    daysAgo: 7,
+    values: [
+      "None",
+      "No",
+      "",
+      "I’d love to build the playground UI — a prompt box, a sprite grid, and a download button.",
+    ],
+    message: "Not an ML person, but I can make the frontend shine.",
+  },
+  {
+    post: "Streaks",
+    applicant: "u-aiko",
+    role: "Mobile (iOS)",
+    status: "pending",
+    daysAgo: 0.5,
+    values: [
+      ["iOS (Swift)", "Android (Kotlin)"],
+      "Yes",
+      "Expert",
+      "https://aiko.games/apps",
+      "Habit apps are a great fit for widgets and I’ve shipped two WidgetKit apps.",
+    ],
+    message: "Happy to share TestFlight builds of my past apps.",
+  },
+  {
+    post: "Cozy farming game",
+    applicant: "u-sam",
+    role: "Game programmer",
+    status: "rejected",
+    daysAgo: 1,
+    values: [
+      ["Godot"],
+      "Programming",
+      "No",
+      "Stardew Valley — cozy forever.",
+      "I’ve never done a jam and want to try one.",
+    ],
+    message: "",
+  },
+  {
+    post: "Cozy farming game",
+    applicant: "u-priya",
+    role: "Artist",
+    status: "pending",
+    daysAgo: 0.3,
+    values: [
+      ["Unity", "Godot"],
+      "Art",
+      "Yes",
+      "Spiritfarer — gorgeous and kind.",
+      "I’ve been learning pixel art and a jam is the perfect deadline.",
+    ],
+    message: "Here’s a tileset I made last month: priyaraman.design/pixels",
+  },
+  {
+    post: "Ideas for a campus lost & found",
+    applicant: "u-jordan",
+    role: "Backend",
+    status: "pending",
+    daysAgo: 0.8,
+    values: [
+      "3–6 hours",
+      "Ledgerline, a personal finance CLI",
+      "Yes",
+      "Helping a newer dev scope something real for their campus.",
+    ],
+    message: "Happy to mentor and help you pick a stack that keeps it simple.",
+  },
+  {
+    post: "Let’s brainstorm",
+    applicant: "u-leo",
+    role: "Engineer",
+    status: "pending",
+    daysAgo: 1.5,
+    values: [
+      ["Focus & time blindness", "Note-taking"],
+      "I have ADHD and have built a few scripts to keep myself on track.",
+      "Async in a shared doc",
+    ],
+    message: "",
+  },
+];
+
 async function seed() {
   // One transaction: either everything is saved, or nothing is.
   await db.transaction(async (tx) => {
@@ -451,6 +610,15 @@ async function seed() {
     );
 
     // 7. Posts, with their roles, skills and application questions.
+    //    Remember what was created, so applications can point at it.
+    const created = new Map<
+      string,
+      {
+        id: string;
+        roles: Map<string, string>;
+        questions: { id: string; label: string; type: QuestionType }[];
+      }
+    >();
     for (const demo of demoPosts) {
       const {
         roles,
@@ -461,30 +629,46 @@ async function seed() {
         ...columns
       } = demo;
       const createdAt = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
-      const [created] = await tx
+      const [row] = await tx
         .insert(post)
         .values({ ...columns, createdAt, updatedAt: createdAt })
         .returning({ id: post.id });
-      await tx.insert(postRole).values(
-        roles.map((role, position) => ({
-          postId: created.id,
-          position,
-          ...role,
-        })),
-      );
-      await tx.insert(postQuestion).values(
-        questions.map((question, position) => ({
-          postId: created.id,
-          position,
-          ...question,
-        })),
-      );
+      const roleRows = await tx
+        .insert(postRole)
+        .values(
+          roles.map((role, position) => ({
+            postId: row.id,
+            position,
+            ...role,
+          })),
+        )
+        .returning({ id: postRole.id, name: postRole.name });
+      const questionRows = await tx
+        .insert(postQuestion)
+        .values(
+          questions.map((question, position) => ({
+            postId: row.id,
+            position,
+            ...question,
+          })),
+        )
+        .returning({
+          id: postQuestion.id,
+          label: postQuestion.label,
+          type: postQuestion.type,
+          position: postQuestion.position,
+        });
+      created.set(demo.title, {
+        id: row.id,
+        roles: new Map(roleRows.map((r) => [r.name, r.id])),
+        questions: questionRows.sort((a, b) => a.position - b.position),
+      });
       const all = [...requiredSkills, ...niceSkills];
       const ids = await findOrCreateSkills(tx, all);
       if (all.length > 0) {
         await tx.insert(postSkill).values(
           all.map((name) => ({
-            postId: created.id,
+            postId: row.id,
             skillId: ids.get(name.toLowerCase())!,
             kind: requiredSkills.includes(name)
               ? ("required" as const)
@@ -494,8 +678,35 @@ async function seed() {
       }
     }
 
+    // 8. Applications, with answers saved next to a copy of each question.
+    for (const demo of demoApplications) {
+      const title = [...created.keys()].find((t) => t.startsWith(demo.post))!;
+      const target = created.get(title)!;
+      const appliedAt = new Date(Date.now() - demo.daysAgo * 24 * 3600 * 1000);
+      await tx.insert(application).values({
+        postId: target.id,
+        applicantId: demo.applicant,
+        roleId: target.roles.get(demo.role)!,
+        roleName: demo.role,
+        status: demo.status,
+        message: demo.message || null,
+        // Answers are in question order; "" or [] means skipped.
+        answers: target.questions.flatMap((q, i) => {
+          const value = demo.values[i];
+          const skipped =
+            value === undefined ||
+            (Array.isArray(value) ? value.length === 0 : value === "");
+          return skipped
+            ? []
+            : [{ questionId: q.id, label: q.label, type: q.type, value }];
+        }),
+        createdAt: appliedAt,
+        updatedAt: appliedAt,
+      });
+    }
+
     console.log(
-      `Seeded ${demoProfiles.length} profiles, ${demoPosts.length} posts.`,
+      `Seeded ${demoProfiles.length} profiles, ${demoPosts.length} posts, ${demoApplications.length} applications.`,
     );
   });
 }
