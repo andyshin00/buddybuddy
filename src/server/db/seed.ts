@@ -12,8 +12,20 @@ import "./load-env"; // must come first, see load-env.ts
 
 import { inArray } from "drizzle-orm";
 
+import type { Duration, LinkKey, PostType } from "@/lib/constants";
+
 import { db } from "./index";
-import { profile, profilePrivate, profileSkill, skill, user } from "./schema";
+import {
+  post,
+  postRole,
+  postSkill,
+  profile,
+  profilePrivate,
+  profileSkill,
+  skill,
+  user,
+} from "./schema";
+import { findOrCreateSkills } from "./skills";
 
 const demoProfiles = [
   {
@@ -163,6 +175,140 @@ const demoPrivate = [
   },
 ];
 
+// Posts from the prototype. `daysAgo` sets how old each one looks.
+const demoPosts: {
+  ownerId: string;
+  title: string;
+  description: string;
+  type: PostType;
+  status?: "open" | "closed";
+  roles: { name: string; filled?: boolean }[];
+  requiredSkills: string[];
+  niceSkills: string[];
+  hoursPerWeek: number;
+  duration: Duration;
+  timezone?: string;
+  requiredLinks?: LinkKey[];
+  daysAgo: number;
+}[] = [
+  {
+    ownerId: "u-maya",
+    title: "StudySync — shared study rooms for CS courses",
+    description:
+      "A web app where students in the same course can spin up a study room with a shared timer, a whiteboard, and a queue for questions. I have mockups and a React prototype of the room UI. I need someone to own the backend (auth, rooms, real-time sync) and a designer to polish the flows.",
+    type: "need-builders",
+    roles: [{ name: "Backend" }, { name: "Designer", filled: true }],
+    requiredSkills: ["Node.js", "WebSockets"],
+    niceSkills: ["PostgreSQL", "Figma"],
+    hoursPerWeek: 6,
+    duration: "1-month",
+    timezone: "UTC-8 (Pacific)",
+    daysAgo: 3,
+  },
+  {
+    ownerId: "u-jordan",
+    title: "Ledgerline: open-source personal finance CLI needs a web dashboard",
+    description:
+      "Ledgerline is a Go CLI (about 200 users) that categorizes bank CSV exports. People keep asking for a web dashboard with charts. The API is ready; I need a frontend dev to build the dashboard in React + TypeScript. Good first issues are labeled in the repo.",
+    type: "fill-role",
+    roles: [{ name: "Frontend" }],
+    requiredSkills: ["React", "TypeScript"],
+    niceSkills: ["D3.js", "Tailwind"],
+    hoursPerWeek: 5,
+    duration: "3-plus-months",
+    requiredLinks: ["github"],
+    daysAgo: 6,
+  },
+  {
+    ownerId: "u-priya",
+    title: "Let’s brainstorm: study tools for neurodivergent students",
+    description:
+      "No code yet — I want to find 2–3 people to explore problems neurodivergent students face (focus, time blindness, overwhelming group work) and decide together whether there’s a small tool worth building. Lived experience very welcome.",
+    type: "ideate",
+    roles: [{ name: "Engineer" }, { name: "Researcher" }],
+    requiredSkills: [],
+    niceSkills: ["UX research", "React"],
+    hoursPerWeek: 3,
+    duration: "2-weeks",
+    daysAgo: 2,
+  },
+  {
+    ownerId: "u-leo",
+    title:
+      "Sprite Forge: pixel-art sprite generator with small diffusion models",
+    description:
+      "I’m fine-tuning a small diffusion model to generate 32×32 game sprites from text prompts. Training works locally. I want an ML collaborator to help with dataset curation and evaluation, and a frontend dev to build a simple web playground.",
+    type: "need-builders",
+    roles: [{ name: "ML Engineer" }, { name: "Frontend" }],
+    requiredSkills: ["Python", "PyTorch"],
+    niceSkills: ["React", "Pixel art"],
+    hoursPerWeek: 5,
+    duration: "3-months",
+    timezone: "UTC+1 (Central Europe)",
+    requiredLinks: ["github"],
+    daysAgo: 9,
+  },
+  {
+    ownerId: "u-aiko",
+    title: "Cozy farming game for the October 48h game jam",
+    description:
+      "Joining a 48-hour online jam next weekend. Theme is announced at kickoff, but I want to make something cozy and farm-y in Unity. Looking for a programmer, a pixel artist, and someone for music/SFX. Beginners welcome if you’re ready to scope small!",
+    type: "need-builders",
+    roles: [
+      { name: "Game programmer" },
+      { name: "Artist" },
+      { name: "Sound designer" },
+    ],
+    requiredSkills: ["Unity", "C#"],
+    niceSkills: ["Pixel art"],
+    hoursPerWeek: 20,
+    duration: "weekend",
+    daysAgo: 1.2,
+  },
+  {
+    ownerId: "u-sam",
+    title: "Ideas for a campus lost & found app?",
+    description:
+      "Our campus lost & found is a spreadsheet nobody checks. I think a simple app (post a found item with a photo, get notified if it matches what you lost) could help. I’m a beginner and would love to ideate with someone more experienced before we build anything.",
+    type: "ideate",
+    roles: [{ name: "Mobile (Android)" }, { name: "Backend" }],
+    requiredSkills: [],
+    niceSkills: ["Firebase", "React Native"],
+    hoursPerWeek: 4,
+    duration: "1-month",
+    timezone: "UTC-5 (Eastern)",
+    daysAgo: 4,
+  },
+  {
+    ownerId: "u-jordan",
+    title: "Streaks: habit tracker needs an iOS developer",
+    description:
+      "Streaks has a working backend (Go + Postgres) and a web version with ~1k weekly users. We want a native iOS app with widgets and reminders. Looking for an experienced Swift/SwiftUI developer to own the client.",
+    type: "fill-role",
+    roles: [{ name: "Mobile (iOS)" }],
+    requiredSkills: ["Swift", "SwiftUI"],
+    niceSkills: ["GraphQL"],
+    hoursPerWeek: 6,
+    duration: "3-plus-months",
+    requiredLinks: ["github", "linkedin"],
+    daysAgo: 12,
+  },
+  {
+    ownerId: "u-maya",
+    title: "Folio: one-click portfolio sites for students",
+    description:
+      "Paste your GitHub and resume, get a clean portfolio site. Built over a weekend hackathon — team is full, keeping this up for reference.",
+    type: "need-builders",
+    status: "closed",
+    roles: [{ name: "Frontend", filled: true }],
+    requiredSkills: ["React"],
+    niceSkills: ["Next.js"],
+    hoursPerWeek: 4,
+    duration: "weekend",
+    daysAgo: 30,
+  },
+];
+
 async function seed() {
   // One transaction: either everything is saved, or nothing is.
   await db.transaction(async (tx) => {
@@ -205,8 +351,38 @@ async function seed() {
       ),
     );
 
+    // 7. Posts, with their roles and skills.
+    for (const demo of demoPosts) {
+      const { roles, requiredSkills, niceSkills, daysAgo, ...columns } = demo;
+      const createdAt = new Date(Date.now() - daysAgo * 24 * 3600 * 1000);
+      const [created] = await tx
+        .insert(post)
+        .values({ ...columns, createdAt, updatedAt: createdAt })
+        .returning({ id: post.id });
+      await tx.insert(postRole).values(
+        roles.map((role, position) => ({
+          postId: created.id,
+          position,
+          ...role,
+        })),
+      );
+      const all = [...requiredSkills, ...niceSkills];
+      const ids = await findOrCreateSkills(tx, all);
+      if (all.length > 0) {
+        await tx.insert(postSkill).values(
+          all.map((name) => ({
+            postId: created.id,
+            skillId: ids.get(name.toLowerCase())!,
+            kind: requiredSkills.includes(name)
+              ? ("required" as const)
+              : ("nice" as const),
+          })),
+        );
+      }
+    }
+
     console.log(
-      `Seeded ${demoProfiles.length} profiles and ${skills.length} skills.`,
+      `Seeded ${demoProfiles.length} profiles, ${demoPosts.length} posts.`,
     );
   });
 }

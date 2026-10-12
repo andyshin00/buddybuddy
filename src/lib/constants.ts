@@ -31,3 +31,36 @@ export const LINKS = [
 ] as const;
 
 export type LinkKey = (typeof LINKS)[number]["key"];
+
+export const POST_TYPES = [
+  {
+    value: "need-builders",
+    label: "Have an idea, need builders",
+    short: "Need builders",
+    badgeClass: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+  },
+  {
+    value: "ideate",
+    label: "Open to ideating together",
+    short: "Ideating",
+    badgeClass: "bg-amber-50 text-amber-800 ring-amber-200",
+  },
+  {
+    value: "fill-role",
+    label: "Existing project, need a role filled",
+    short: "Role to fill",
+    badgeClass: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  },
+] as const;
+
+export type PostType = (typeof POST_TYPES)[number]["value"];
+
+export const DURATIONS = [
+  { value: "weekend", label: "A weekend" },
+  { value: "2-weeks", label: "~2 weeks" },
+  { value: "1-month", label: "~1 month" },
+  { value: "3-months", label: "~3 months" },
+  { value: "3-plus-months", label: "3+ months" },
+] as const;
+
+export type Duration = (typeof DURATIONS)[number]["value"];
