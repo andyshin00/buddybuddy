@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M3 — Profiles
+- **Milestone:** M4 — Posts
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -22,7 +22,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Production deploys run `db:migrate` before building (`vercel.json`); see [ADR 002](decisions/002-migrations-on-deploy.md).
   - `npm run db:seed` fills the `dev` database with the prototype's 6 demo profiles and their skills. **M1 complete.**
   - Sign-in with GitHub and Google (Better Auth, account linking), sign-out, `getViewer()` / `requireViewer()` / `requireProfile()`, `proxy.ts`, and username onboarding, all in one PR. How it works and setup: [auth.md](auth.md). **M2 complete.**
-- **Next step:** PR `feat(profiles): add public profile page` (`/u/[username]`).
+  - Profiles: page `/u/[username]`, edit form `/settings/profile` (one Server Action, one transaction), private details in `profile_private` shown only through `getPrivateProfile()` (rules unit-tested). How it works: [profiles.md](profiles.md). **M3 complete.**
+- **Next step:** M4 in one PR: post tables + migration, create / edit / close posts, browse page with filters.
 
 ---
 
@@ -58,10 +59,10 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M3 — Profiles
 
-- [ ] Public profile page `/u/[username]`
-- [ ] Edit own profile (Server Action + shared Zod schema; skills, experience, availability)
-- [ ] `profile_private` (real name, links, contact) + per-link public flags
-- [ ] `getPrivateProfile(viewer, userId)` authorization + unit tests
+- [x] Public profile page `/u/[username]`
+- [x] Edit own profile (Server Action + shared Zod schema; skills, experience, availability)
+- [x] `profile_private` (real name, links, contact) + per-link public flags
+- [x] `getPrivateProfile(viewer, userId)` authorization + unit tests
 
 ## M4 — Posts
 

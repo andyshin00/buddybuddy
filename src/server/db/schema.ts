@@ -151,6 +151,28 @@ export const profile = pgTable(
   ],
 );
 
+// Private details. Only read through getPrivateProfile(), which decides who
+// may see what (docs/privacy.md). Public queries never select from here.
+export const profilePrivate = pgTable("profile_private", {
+  userId: text()
+    .primaryKey()
+    .references(() => profile.userId, { onDelete: "cascade" }),
+  realName: text(),
+  githubUrl: text(),
+  linkedinUrl: text(),
+  portfolioUrl: text(),
+  // The owner can make each link visible to every signed-in user.
+  githubPublic: boolean().notNull().default(false),
+  linkedinPublic: boolean().notNull().default(false),
+  portfolioPublic: boolean().notNull().default(false),
+  email: text(),
+  discord: text(),
+  updatedAt: timestamp({ withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
 // Many-to-many: which skills a profile lists.
 export const profileSkill = pgTable(
   "profile_skill",
