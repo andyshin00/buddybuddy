@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M2 — Auth
+- **Milestone:** M3 — Profiles
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -21,7 +21,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - First migration (`0000_profile_and_skills`): `profile`, `skill`, `profile_skill`, applied to the Neon `dev` branch. `profile.user_id` has no foreign key yet; it is added in M2.
   - Production deploys run `db:migrate` before building (`vercel.json`); see [ADR 002](decisions/002-migrations-on-deploy.md).
   - `npm run db:seed` fills the `dev` database with the prototype's 6 demo profiles and their skills. **M1 complete.**
-- **Next step:** PR `feat(auth): add better auth` (Better Auth + Drizzle adapter, auth tables migration with the `profile.user_id` foreign key, `/api/auth/[...all]` handler).
+  - Sign-in with GitHub and Google (Better Auth, account linking), sign-out, `getViewer()` / `requireViewer()` / `requireProfile()`, `proxy.ts`, and username onboarding, all in one PR. How it works and setup: [auth.md](auth.md). **M2 complete.**
+- **Next step:** PR `feat(profiles): add public profile page` (`/u/[username]`).
 
 ---
 
@@ -49,11 +50,11 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M2 — Auth
 
-- [ ] Better Auth + Drizzle adapter + auth tables migration (also adds the `profile.user_id` → `user.id` foreign key); `/api/auth/[...all]` handler
-- [ ] GitHub OAuth sign-in page, session in the root layout, sign-out
-- [ ] Google OAuth + account linking
-- [ ] `getViewer()` helper; route protection in `proxy.ts`
-- [ ] Onboarding: choose a unique username → creates `profile`; redirect until done
+- [x] Better Auth + Drizzle adapter + auth tables migration (also adds the `profile.user_id` → `user.id` foreign key); `/api/auth/[...all]` handler
+- [x] GitHub OAuth sign-in page, session in the root layout, sign-out
+- [x] Google OAuth + account linking
+- [x] `getViewer()` helper; route protection in `proxy.ts`
+- [x] Onboarding: choose a unique username → creates `profile`; redirect until done
 
 ## M3 — Profiles
 

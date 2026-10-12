@@ -1,7 +1,7 @@
 // Fills the local database with demo data, ported from the prototype
 // (docs/reference/prototype/seed.ts). Run it with `npm run db:seed`.
 //
-// It DELETES everything in these tables first, so only run it against the
+// It deletes the old demo users and ALL skills first, so only run it against the
 // `dev` database in .env.local, never production.
 //
 // Real names, links and contact details are left out on purpose (see
@@ -10,8 +10,10 @@
 
 import "./load-env"; // must come first, see load-env.ts
 
+import { inArray } from "drizzle-orm";
+
 import { db } from "./index";
-import { profile, profileSkill, skill } from "./schema";
+import { profile, profileSkill, skill, user } from "./schema";
 
 const demoProfiles = [
   {
@@ -105,12 +107,22 @@ const demoProfiles = [
 async function seed() {
   // One transaction: either everything is saved, or nothing is.
   await db.transaction(async (tx) => {
-    // 1. Empty the tables (profile_skill first, because it points at the others).
-    await tx.delete(profileSkill);
-    await tx.delete(profile);
+    // 1. Remove the old demo data. Deleting a demo user also deletes their
+    //    profile (cascade). Your own dev account is left alone.
+    const demoUserIds = demoProfiles.map((d) => d.profile.userId);
+    await tx.delete(user).where(inArray(user.id, demoUserIds));
     await tx.delete(skill);
 
-    // 2. Every skill that appears on any profile, once each.
+    // 2. A `user` row for each demo person (normally made by signing in).
+    await tx.insert(user).values(
+      demoProfiles.map((d) => ({
+        id: d.profile.userId,
+        name: d.profile.displayName,
+        email: `${d.profile.username}@example.com`,
+      })),
+    );
+
+    // 3. Every skill that appears on any profile, once each.
     const skillNames = [...new Set(demoProfiles.flatMap((d) => d.skills))];
     const skills = await tx
       .insert(skill)
@@ -118,10 +130,10 @@ async function seed() {
       .returning();
     const skillIdByName = new Map(skills.map((s) => [s.name, s.id]));
 
-    // 3. The profiles themselves.
+    // 4. The profiles themselves.
     await tx.insert(profile).values(demoProfiles.map((d) => d.profile));
 
-    // 4. Link each profile to its skills.
+    // 5. Link each profile to its skills.
     await tx.insert(profileSkill).values(
       demoProfiles.flatMap((d) =>
         d.skills.map((name) => ({
