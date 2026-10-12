@@ -154,7 +154,9 @@ You need **three OAuth registrations** and some settings in two places.
 
 GitHub needs two apps because each one allows only **one** callback URL. Google allows several, so one is enough.
 
-**First, find your production address.** In Vercel, open your project → **Settings** → **Domains**. It looks like `https://buddybuddy-xxxx.vercel.app`. Below, `PROD` means that address.
+**First, find your production address.** In Vercel, open your project → **Settings** → **Domains**. You'll see something like `buddybuddy-abc123.vercel.app`.
+
+> **`PROD` below is a placeholder, not something to type.** Replace it with `https://` + your address. For example, `PROD/api/auth/callback/github` becomes `https://buddybuddy-abc123.vercel.app/api/auth/callback/github`.
 
 ### Step 1: GitHub OAuth apps
 
