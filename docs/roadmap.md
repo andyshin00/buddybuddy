@@ -1,10 +1,10 @@
 # Roadmap
 
-Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, and keep **Current status** up to date.
+The planned milestones (M0–M9) are all done. From here on there's no fixed plan: changes are made one request at a time, each in its own PR, and added to **After M9** below.
 
 ## Current status
 
-- **Milestone:** M9 — Hardening
+- **Milestone:** all planned milestones complete (M0–M9)
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -28,7 +28,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Applying: `application` table (answers saved with a copy of each question), `getApplyBlocker` + answer schema built from the questions (tested), apply page, "My applications" + withdraw, 10 demo applications. How it works: [applications.md](applications.md). **M6 complete.**
   - Reviewing: "My posts" with counts, owner-only applicants page (skill match, answers, tabs in the URL), accept / reject / back to pending in a transaction (optionally marking the role filled), contact details shown to both sides once accepted (`relationshipFrom`, tested), "projects posted / joined" on profiles. How it works: [reviewing.md](reviewing.md). **M7 complete.**
   - Notifications: `notification` table, created by `notify()` inside the apply / withdraw / status-change transactions (not a Server Action, on purpose), the header bell with an unread badge and dropdown, opening it marks all read, demo notifications in the seed. How it works: [notifications.md](notifications.md). **M8 complete.**
-- **Next step:** M9 in one PR: Playwright E2E of the full flow in CI, `loading` / `error` / `not-found` pages, rate limiting on write actions, an accessibility pass, block / report and account deletion.
+  - Hardening: Playwright E2E tests in CI (full flow, blocking, reports, rate limits, account deletion, axe accessibility checks on every main page) against a Postgres service container; `not-found` / `error` / `global-error` / `loading` pages; per-user rate limits on write actions (in Postgres); skip link, focus rings, keyboard-friendly bell; block / unblock, report a user or post, delete your account. How it works: [hardening.md](hardening.md). **M9 complete.**
+- **Next step:** whatever the owner asks for next. Each request gets its own branch and PR.
 
 ---
 
@@ -104,14 +105,16 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M9 — Hardening
 
-- [ ] Playwright E2E of the full flow (post → apply → accept → contact revealed) in CI with a Postgres service container
-- [ ] `loading.tsx` / `error.tsx` / `not-found.tsx` boundaries
-- [ ] Rate limiting on write actions
-- [ ] Accessibility pass (keyboard, labels, contrast)
-- [ ] Block / report, account deletion
+- [x] Playwright E2E of the full flow (post → apply → accept → contact revealed) in CI with a Postgres service container
+- [x] `loading.tsx` / `error.tsx` / `not-found.tsx` boundaries
+- [x] Rate limiting on write actions
+- [x] Accessibility pass (keyboard, labels, contrast)
+- [x] Block / report, account deletion
 
-## M10 — Polish (owner's call)
+(M10 "Polish" was dropped: the owner decided it wasn't needed.)
 
-- [ ] Landing page
-- [ ] Animations (GSAP / Motion)
-- [ ] Dark mode
+## After M9
+
+Changes made on request, newest last.
+
+- _Nothing yet._

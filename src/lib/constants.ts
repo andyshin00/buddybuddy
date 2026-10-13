@@ -79,3 +79,12 @@ export type QuestionType = (typeof QUESTION_TYPES)[number]["value"];
 export function hasOptions(type: QuestionType): boolean {
   return type === "dropdown" || type === "multi";
 }
+
+// Why someone is reporting a user or post. Matches the report_reason enum.
+export const REPORT_REASONS = [
+  { value: "spam", label: "Spam or advertising" },
+  { value: "harassment", label: "Harassment or hate" },
+  { value: "inappropriate", label: "Inappropriate content" },
+  { value: "scam", label: "Scam or fake project" },
+  { value: "other", label: "Something else" },
+] as const;

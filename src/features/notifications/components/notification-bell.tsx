@@ -37,7 +37,8 @@ export function NotificationBell({
     }
   }
 
-  // Close the dropdown when clicking anywhere outside it.
+  // Close the dropdown when clicking anywhere outside it, or on Escape
+  // (then focus goes back to the bell, so keyboard users aren't lost).
   useEffect(() => {
     function onClick(event: MouseEvent) {
       const details = ref.current;
@@ -45,8 +46,19 @@ export function NotificationBell({
         details.open = false;
       }
     }
+    function onKeyDown(event: KeyboardEvent) {
+      const details = ref.current;
+      if (event.key === "Escape" && details?.open) {
+        details.open = false;
+        details.querySelector("summary")?.focus();
+      }
+    }
     document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("click", onClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
   return (

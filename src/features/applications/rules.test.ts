@@ -24,6 +24,12 @@ describe("getApplyBlocker", () => {
     );
   });
 
+  it("blocks applying when either person blocked the other", () => {
+    expect(getApplyBlocker(post, { ...sam, blocked: true })?.reason).toBe(
+      "You can’t apply to this post.",
+    );
+  });
+
   it("blocks a second application", () => {
     expect(
       getApplyBlocker(post, { ...sam, alreadyApplied: true })?.reason,

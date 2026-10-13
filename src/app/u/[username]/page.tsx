@@ -7,6 +7,13 @@ import {
   getProfileByUsername,
   getProfileProjects,
 } from "@/features/profiles/queries";
+import {
+  blockUser,
+  submitReport,
+  unblockUser,
+} from "@/features/safety/actions";
+import { ReportForm } from "@/features/safety/components/report-form";
+import { getBlockState } from "@/features/safety/queries";
 import { EXPERIENCE_LEVELS, LINKS } from "@/lib/constants";
 import { requireProfile } from "@/server/auth";
 
@@ -35,9 +42,10 @@ async function Profile({ params }: Pick<PageProps<"/u/[username]">, "params">) {
   const name = person.displayName ?? person.username;
   const isYou = person.userId === viewer.id;
   // Only what this viewer is allowed to see (docs/privacy.md).
-  const [details, projects] = await Promise.all([
+  const [details, projects, blocks] = await Promise.all([
     getPrivateProfile(viewer, person.userId),
     getProfileProjects(viewer, person.userId),
+    getBlockState(viewer, person.userId),
   ]);
   const visibleLinks = LINKS.filter((link) => details.links[link.key]);
 
@@ -70,6 +78,23 @@ async function Profile({ params }: Pick<PageProps<"/u/[username]">, "params">) {
           </Link>
         )}
       </header>
+
+      {blocks.iBlocked && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+        >
+          <p className="flex-1">
+            You blocked @{person.username}. You won’t see each other’s posts,
+            and neither of you can apply to the other’s projects.
+          </p>
+          <form action={unblockUser.bind(null, person.userId)}>
+            <button type="submit" className="font-medium underline">
+              Unblock
+            </button>
+          </form>
+        </div>
+      )}
 
       {person.bio && <p className="whitespace-pre-line">{person.bio}</p>}
 
@@ -191,6 +216,29 @@ async function Profile({ params }: Pick<PageProps<"/u/[username]">, "params">) {
             )}
           </dl>
         </section>
+      )}
+
+      {/* Safety tools, for other people's profiles only. */}
+      {!isYou && (
+        <footer className="flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          {!blocks.iBlocked && (
+            <form action={blockUser.bind(null, person.userId)}>
+              <button
+                type="submit"
+                className="text-sm text-zinc-500 hover:underline"
+              >
+                Block @{person.username}
+              </button>
+            </form>
+          )}
+          <ReportForm
+            label={`Report @${person.username}`}
+            action={submitReport.bind(null, {
+              kind: "user",
+              userId: person.userId,
+            })}
+          />
+        </footer>
       )}
     </article>
   );

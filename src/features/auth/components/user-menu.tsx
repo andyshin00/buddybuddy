@@ -23,7 +23,7 @@ export async function UserMenu() {
   const notifications = viewer.username ? await getNotifications(viewer) : null;
 
   return (
-    <div className="flex items-center gap-4 text-sm">
+    <nav aria-label="Account" className="flex items-center gap-4 text-sm">
       {viewer.username ? (
         <>
           <Link href="/my-posts" className="hover:underline">
@@ -63,6 +63,6 @@ export async function UserMenu() {
           Sign out
         </button>
       </form>
-    </div>
+    </nav>
   );
 }

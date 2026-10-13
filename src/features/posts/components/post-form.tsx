@@ -43,6 +43,11 @@ export function PostForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
+      {state.formError && (
+        <p role="alert" className="text-sm text-red-600">
+          {state.formError}
+        </p>
+      )}
       <div className="flex flex-col gap-1">
         <label htmlFor="title" className="text-sm font-medium">
           Title

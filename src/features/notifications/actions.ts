@@ -8,6 +8,8 @@ import { notification } from "@/server/db/schema";
 
 // Called when the bell's dropdown opens. It takes no arguments, so there's
 // nothing to tamper with: it can only ever mark YOUR notifications read.
+// Not rate limited: it only ever changes your own rows, and repeating it
+// does nothing new.
 export async function markAllRead() {
   const viewer = await requireProfile();
   await db

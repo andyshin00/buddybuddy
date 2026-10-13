@@ -9,6 +9,11 @@ import { requireProfile } from "@/server/auth";
 import { db } from "@/server/db";
 import { post, postQuestion, postRole, postSkill } from "@/server/db/schema";
 import { findOrCreateSkills } from "@/server/db/skills";
+import {
+  enforceRateLimit,
+  isRateLimited,
+  TOO_MANY_REQUESTS,
+} from "@/server/rate-limit";
 
 import { getOwnPost } from "./queries";
 import {
@@ -18,6 +23,7 @@ import {
 } from "./schemas";
 
 export type PostFormState = {
+  formError?: string; // e.g. "doing that too often", shown at the top
   values?: PostFormInput; // what was typed, kept after an error
   fieldErrors?: Partial<Record<keyof PostFormInput, string[]>>;
 };
@@ -111,8 +117,11 @@ export async function createPost(
   _previous: PostFormState,
   formData: FormData,
 ): Promise<PostFormState> {
-  // 1. Who's asking?
+  // 1. Who's asking, and are they posting too fast?
   const viewer = await requireProfile();
+  if (await isRateLimited("post", viewer.id)) {
+    return { values: readPostForm(formData), formError: TOO_MANY_REQUESTS };
+  }
 
   // 2. Valid input?
   const { data, state } = validate(formData);
@@ -149,6 +158,9 @@ export async function updatePost(
   const viewer = await requireProfile();
   const existing = await getOwnPost(viewer, postId);
   if (!existing) notFound();
+  if (await isRateLimited("write", viewer.id)) {
+    return { values: readPostForm(formData), formError: TOO_MANY_REQUESTS };
+  }
 
   // 2. Valid input?
   const { data, state } = validate(formData);
@@ -194,6 +206,7 @@ export async function setPostStatus(postId: string, status: "open" | "closed") {
   const viewer = await requireProfile();
   const parsedStatus = z.enum(["open", "closed"]).parse(status);
   if (!(await getOwnPost(viewer, postId))) notFound();
+  await enforceRateLimit("write", viewer.id);
 
   await db
     .update(post)
@@ -215,6 +228,7 @@ export async function setRoleFilled(
     .object({ roleId: z.uuid(), filled: z.boolean() })
     .safeParse({ roleId, filled });
   if (!parsed.success || !(await getOwnPost(viewer, postId))) notFound();
+  await enforceRateLimit("write", viewer.id);
 
   // `postId` in the WHERE too: a role id from another post matches nothing.
   await db

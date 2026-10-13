@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -11,7 +12,15 @@ export const metadata: Metadata = { title: "Edit profile · BuddyBuddy" };
 export default function EditProfilePage() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
-      <h1 className="mb-6 text-2xl font-semibold">Edit profile</h1>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Edit profile</h1>
+        <Link
+          href="/settings/account"
+          className="text-sm text-zinc-500 underline"
+        >
+          Account settings
+        </Link>
+      </div>
       <Suspense fallback={<p className="text-zinc-500">Loading…</p>}>
         <EditProfile />
       </Suspense>

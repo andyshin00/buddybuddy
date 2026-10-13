@@ -20,7 +20,7 @@
 | Auth          | **Better Auth** with GitHub + Google OAuth                       | No password storage, reset flows or hashing to get wrong. Type-safe and works with Drizzle. GitHub sign-in fits the audience      |
 | Authorization | Our own server-side data layer (not database row-level security) | Easier to read, debug and test as plain TypeScript                                                                                |
 | UI            | **Tailwind v4 + shadcn/ui** for accessible primitives            | Dropdowns, dialogs and selects are hard to make accessible by hand. We own the generated code                                     |
-| Testing       | **Vitest** now, **Playwright** later                             | Fast unit tests for business rules first; one E2E flow once features exist                                                        |
+| Testing       | **Vitest** (unit) and **Playwright** (E2E, added in M9)          | Fast unit tests for business rules first; one E2E flow once features exist                                                        |
 | CI/CD         | **GitHub Actions + Vercel**                                      | Every PR is linted, type-checked, tested, built and previewed before merge                                                        |
 
 ## Consequences

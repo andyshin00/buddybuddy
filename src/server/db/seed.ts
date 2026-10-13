@@ -9,7 +9,7 @@
 
 import "./load-env"; // must come first, see load-env.ts
 
-import { inArray } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 
 import {
   QUESTION_TEMPLATES,
@@ -37,6 +37,7 @@ import {
   profile,
   profilePrivate,
   profileSkill,
+  rateLimit,
   skill,
   user,
 } from "./schema";
@@ -579,6 +580,11 @@ async function seed() {
     const demoUserIds = demoProfiles.map((d) => d.profile.userId);
     await tx.delete(user).where(inArray(user.id, demoUserIds));
     await tx.delete(skill);
+    // Rate-limit counters ("apply:u-sam") aren't linked to users, so clear
+    // the demo users' by hand: tests can run again straight away.
+    await tx
+      .delete(rateLimit)
+      .where(inArray(sql`split_part(${rateLimit.key}, ':', 2)`, demoUserIds));
 
     // 2. A `user` row for each demo person (normally made by signing in).
     await tx.insert(user).values(
