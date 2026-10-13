@@ -43,6 +43,13 @@
       "when": 1791779533276,
       "tag": "0005_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791872778732,
+      "tag": "0006_notifications",
+      "breakpoints": true
     }
   ]
 }

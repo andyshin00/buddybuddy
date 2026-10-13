@@ -42,7 +42,7 @@ So moving someone back to pending hides their contact again, automatically. We t
 
 ## One transaction
 
-Accepting with "mark role filled" changes two tables: `application` and `post_role`. They run inside `db.transaction(...)`: either both are saved, or (if anything fails) neither is. In M8, the notification for the applicant will be added to the same transaction.
+Accepting with "mark role filled" changes `application` and `post_role`. They run inside `db.transaction(...)`: either both are saved, or (if anything fails) neither is. Since M8, the notification for the applicant is saved in the same transaction too (see [notifications.md](notifications.md)).
 
 ## `refresh()` instead of `redirect()`
 

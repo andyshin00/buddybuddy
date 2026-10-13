@@ -5,6 +5,8 @@ import { refresh } from "next/cache";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
+import { notify } from "@/features/notifications/create";
+import { statusChangeNotice } from "@/features/notifications/rules";
 import { requireProfile } from "@/server/auth";
 import { db } from "@/server/db";
 import { application, post, postRole } from "@/server/db/schema";
@@ -28,17 +30,27 @@ export async function setApplicationStatus(
   const fillRole =
     newStatus.data === "accepted" && formData.get("fillRole") === "on";
 
-  // Two tables may change (application, post_role), so it's one
-  // transaction: either both changes are saved, or neither is.
+  // Up to three tables change (application, post_role, notification), so
+  // it's one transaction: either all the changes are saved, or none are.
   const found = await db.transaction(async (tx) => {
     // Find the application AND check ownership in one query: the join only
     // matches if the post belongs to the viewer.
     const [app] = await tx
-      .select({ id: application.id, roleId: application.roleId })
+      .select({
+        id: application.id,
+        status: application.status,
+        applicantId: application.applicantId,
+        roleId: application.roleId,
+        roleName: application.roleName,
+        postId: post.id,
+        postTitle: post.title,
+      })
       .from(application)
       .innerJoin(post, eq(post.id, application.postId))
       .where(and(eq(application.id, id.data), eq(post.ownerId, viewer.id)));
     if (!app) return false;
+    // Clicking the status it already has changes nothing (and notifies nobody).
+    if (app.status === newStatus.data) return true;
 
     await tx
       .update(application)
@@ -51,6 +63,17 @@ export async function setApplicationStatus(
         .set({ filled: true })
         .where(eq(postRole.id, app.roleId));
     }
+
+    await notify(
+      tx,
+      app.applicantId,
+      statusChangeNotice({
+        postId: app.postId,
+        postTitle: app.postTitle,
+        roleName: app.roleName,
+        status: newStatus.data,
+      }),
+    );
     return true;
   });
   // Not the viewer's post (or no such application): same as missing.

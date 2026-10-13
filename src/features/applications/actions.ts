@@ -4,10 +4,19 @@ import { and, eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
+import { notify } from "@/features/notifications/create";
+import {
+  newApplicationNotice,
+  withdrawnNotice,
+} from "@/features/notifications/rules";
 import { requireProfile } from "@/server/auth";
 import { db } from "@/server/db";
 import { isUniqueViolation } from "@/server/db/errors";
-import { type AnswerSnapshot, application } from "@/server/db/schema";
+import {
+  type AnswerSnapshot,
+  application,
+  post as postTable,
+} from "@/server/db/schema";
 
 import { getApplyContext } from "./queries";
 import { openRoles } from "./rules";
@@ -75,14 +84,28 @@ export async function applyToPost(
       : [{ questionId: q.id, label: q.label, type: q.type, value }];
   });
 
+  // The application and the poster's notification are saved together:
+  // one transaction, so there's never one without the other.
   try {
-    await db.insert(application).values({
-      postId: post.id,
-      applicantId: viewer.id,
-      roleId: role.id,
-      roleName: role.name,
-      message: form.data.message,
-      answers: snapshot,
+    await db.transaction(async (tx) => {
+      await tx.insert(application).values({
+        postId: post.id,
+        applicantId: viewer.id,
+        roleId: role.id,
+        roleName: role.name,
+        message: form.data.message,
+        answers: snapshot,
+      });
+      await notify(
+        tx,
+        post.ownerId,
+        newApplicationNotice({
+          postId: post.id,
+          postTitle: post.title,
+          roleName: role.name,
+          applicantUsername: viewer.username,
+        }),
+      );
     });
   } catch (error) {
     // Two submits at once: the database's unique index stops the second.
@@ -102,15 +125,39 @@ export async function withdrawApplication(applicationId: string) {
   const viewer = await requireProfile();
   if (!z.uuid().safeParse(applicationId).success) notFound();
 
-  await db
-    .delete(application)
-    .where(
-      and(
-        eq(application.id, applicationId),
-        eq(application.applicantId, viewer.id),
-        eq(application.status, "pending"),
-      ),
+  await db.transaction(async (tx) => {
+    // RETURNING gives back the deleted row, so we know whether anything
+    // was actually withdrawn (and which post to tell).
+    const [removed] = await tx
+      .delete(application)
+      .where(
+        and(
+          eq(application.id, applicationId),
+          eq(application.applicantId, viewer.id),
+          eq(application.status, "pending"),
+        ),
+      )
+      .returning({
+        postId: application.postId,
+        roleName: application.roleName,
+      });
+    if (!removed) return;
+
+    const [target] = await tx
+      .select({ ownerId: postTable.ownerId, title: postTable.title })
+      .from(postTable)
+      .where(eq(postTable.id, removed.postId));
+    await notify(
+      tx,
+      target.ownerId,
+      withdrawnNotice({
+        postId: removed.postId,
+        postTitle: target.title,
+        roleName: removed.roleName,
+        applicantUsername: viewer.username,
+      }),
     );
+  });
 
   redirect("/applications");
 }
