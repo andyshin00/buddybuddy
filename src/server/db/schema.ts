@@ -391,3 +391,69 @@ export const notification = pgTable(
     index("notification_user_id_created_at_idx").on(t.userId, t.createdAt),
   ],
 );
+
+// ---------------------------------------------------------------------------
+// Safety (M9): blocking, reports, and rate limits
+// ---------------------------------------------------------------------------
+
+// "blocker doesn't want to deal with blocked." Works both ways in the app:
+// neither sees the other's posts in browse, and neither can apply to the
+// other's posts. How it works: docs/hardening.md
+export const block = pgTable(
+  "block",
+  {
+    blockerId: text()
+      .notNull()
+      .references(() => profile.userId, { onDelete: "cascade" }),
+    blockedId: text()
+      .notNull()
+      .references(() => profile.userId, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Blocking twice is the same as blocking once.
+    primaryKey({ columns: [t.blockerId, t.blockedId] }),
+    // "Who blocked me?" is asked too, so index the other direction.
+    index("block_blocked_id_idx").on(t.blockedId),
+    check("block_not_self", sql`${t.blockerId} <> ${t.blockedId}`),
+  ],
+);
+
+export const reportReason = pgEnum("report_reason", [
+  "spam",
+  "harassment",
+  "inappropriate",
+  "scam",
+  "other",
+]);
+
+// A report about a user, or about one of their posts. There's no admin
+// page yet: reports are read in the Neon console (docs/hardening.md).
+export const report = pgTable(
+  "report",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    reporterId: text()
+      .notNull()
+      .references(() => profile.userId, { onDelete: "cascade" }),
+    // The person being reported (for a post: its owner).
+    targetUserId: text()
+      .notNull()
+      .references(() => profile.userId, { onDelete: "cascade" }),
+    // Set when a post was reported. Kept if the post is deleted later.
+    postId: uuid().references(() => post.id, { onDelete: "set null" }),
+    reason: reportReason().notNull(),
+    details: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("report_target_user_id_idx").on(t.targetUserId)],
+);
+
+// One row per (action, user): how many times they did it in the current
+// time window. Used by src/server/rate-limit.ts. Lives in Postgres, not in
+// memory, because Vercel runs many copies of the app at once.
+export const rateLimit = pgTable("rate_limit", {
+  key: text().primaryKey(), // e.g. "apply:u-sam"
+  windowStart: timestamp({ withTimezone: true }).notNull(),
+  count: integer().notNull(),
+});

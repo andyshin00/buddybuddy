@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 
+import { getBlockState } from "@/features/safety/queries";
 import type { Viewer } from "@/server/auth";
 import { db } from "@/server/db";
 import {
@@ -23,12 +24,11 @@ import {
 export type PublicProfile = Awaited<ReturnType<typeof getProfileByUsername>>;
 
 // A profile as other signed-in users see it, or null if there's no such
-// username. Only public fields are selected: nothing from docs/privacy.md's
+// username (or they blocked the viewer). Only public fields are selected: nothing from docs/privacy.md's
 // "Collaborators" rows can end up on the page by accident.
-export async function getProfileByUsername(_viewer: Viewer, username: string) {
-  // `_viewer` isn't used yet: any signed-in user may view any profile.
-  // Requiring it means nobody can call this without signing in first, and
-  // later rules (e.g. blocking) have a place to go.
+export async function getProfileByUsername(viewer: Viewer, username: string) {
+  // Any signed-in user may view any profile, except someone who blocked
+  // them: to them, the profile looks like it doesn't exist.
   const [row] = await db
     .select({
       userId: profile.userId,
@@ -45,6 +45,7 @@ export async function getProfileByUsername(_viewer: Viewer, username: string) {
     .where(eq(sql`lower(${profile.username})`, username.toLowerCase()));
 
   if (!row) return null;
+  if ((await getBlockState(viewer, row.userId)).blockedMe) return null;
 
   const skills = await db
     .select({ name: skill.name })

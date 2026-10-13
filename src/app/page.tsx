@@ -21,10 +21,12 @@ async function HomeContent({
   searchParams,
 }: Pick<PageProps<"/">, "searchParams">) {
   const viewer = await getViewer();
-  if (!viewer) return <Welcome />;
+  const params = await searchParams;
+  // ?deleted=1 is added after deleting an account.
+  if (!viewer) return <Welcome deleted={params.deleted === "1"} />;
   if (!viewer.username) redirect("/onboarding");
 
-  const filters = parseBrowseFilters(await searchParams);
+  const filters = parseBrowseFilters(params);
   const posts = await searchPosts(viewer, filters);
   const filtered =
     filters.search ||
@@ -77,9 +79,17 @@ async function HomeContent({
   );
 }
 
-function Welcome() {
+function Welcome({ deleted }: { deleted: boolean }) {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      {deleted && (
+        <p
+          role="status"
+          className="rounded-md bg-zinc-100 px-4 py-2 text-sm dark:bg-zinc-800"
+        >
+          Your account and everything in it was deleted.
+        </p>
+      )}
       <h1 className="text-4xl font-semibold tracking-tight">BuddyBuddy</h1>
       <p className="max-w-md text-lg text-zinc-600 dark:text-zinc-400">
         Find collaborators for the projects you want to build.

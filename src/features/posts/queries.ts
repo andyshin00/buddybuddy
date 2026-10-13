@@ -26,6 +26,8 @@ import {
   skill,
 } from "@/server/db/schema";
 
+import { getBlockState, notBlockedWith } from "@/features/safety/queries";
+
 import { canManagePost } from "./rules";
 import type { BrowseFilters } from "./schemas";
 
@@ -122,10 +124,14 @@ function escapeLike(text: string) {
 // Browse page: open posts matching the filters, newest first.
 // Each filter in the URL becomes one SQL condition; all must match.
 export async function searchPosts(
-  _viewer: Viewer, // signed-in users only (docs/privacy.md)
+  viewer: Viewer, // signed-in users only (docs/privacy.md)
   filters: BrowseFilters,
 ): Promise<PostDetail[]> {
-  const conditions: SQL[] = [eq(post.status, "open")];
+  const conditions: SQL[] = [
+    eq(post.status, "open"),
+    // Hide posts by people the viewer blocked, or who blocked the viewer.
+    notBlockedWith(viewer, post.ownerId),
+  ];
 
   if (filters.search) {
     const pattern = `%${escapeLike(filters.search)}%`;
@@ -162,9 +168,10 @@ export async function searchPosts(
   return withRolesAndSkills(rows);
 }
 
-// One post, open or closed, for any signed-in viewer. Null if it doesn't exist.
+// One post, open or closed, for any signed-in viewer. Null if it doesn't
+// exist, or if its owner blocked the viewer (it looks deleted to them).
 export async function getPost(
-  _viewer: Viewer,
+  viewer: Viewer,
   postId: string,
 ): Promise<PostWithQuestions | null> {
   // A malformed id can't match anything; checking first avoids a database error.
@@ -172,6 +179,7 @@ export async function getPost(
 
   const [row] = await selectPosts(eq(post.id, postId), 1);
   if (!row) return null;
+  if ((await getBlockState(viewer, row.ownerId)).blockedMe) return null;
   const [detail] = await withRolesAndSkills([row]);
   const questions = await db
     .select({

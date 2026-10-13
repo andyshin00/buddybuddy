@@ -4,6 +4,8 @@ import { and, desc, eq } from "drizzle-orm";
 
 import { getPost } from "@/features/posts/queries";
 import { getPrivateProfiles } from "@/features/profiles/queries";
+import { getBlockState } from "@/features/safety/queries";
+import { isBlockedEitherWay } from "@/features/safety/rules";
 import type { Viewer } from "@/server/auth";
 import { db } from "@/server/db";
 import { application, post, profile, profilePrivate } from "@/server/db/schema";
@@ -17,7 +19,7 @@ export async function getApplyContext(viewer: Viewer, postId: string) {
   const found = await getPost(viewer, postId);
   if (!found) return null;
 
-  const [[existing], [links]] = await Promise.all([
+  const [[existing], [links], blocks] = await Promise.all([
     db
       .select({ id: application.id, status: application.status })
       .from(application)
@@ -36,12 +38,14 @@ export async function getApplyContext(viewer: Viewer, postId: string) {
       })
       .from(profilePrivate)
       .where(eq(profilePrivate.userId, viewer.id)),
+    getBlockState(viewer, found.ownerId),
   ]);
 
   const blocker = getApplyBlocker(found, {
     id: viewer.id,
     links: links ?? {},
     alreadyApplied: Boolean(existing),
+    blocked: isBlockedEitherWay(blocks),
   });
 
   return { post: found, myApplication: existing ?? null, blocker };

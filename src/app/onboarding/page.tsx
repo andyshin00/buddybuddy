@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -14,6 +15,12 @@ export default function OnboardingPage() {
       <Suspense fallback={<p className="text-zinc-500">Loading…</p>}>
         <Onboarding />
       </Suspense>
+      <Link
+        href="/settings/account"
+        className="text-sm text-zinc-500 underline"
+      >
+        Changed your mind? Delete your account
+      </Link>
     </main>
   );
 }

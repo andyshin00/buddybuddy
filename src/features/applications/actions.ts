@@ -13,6 +13,11 @@ import { requireProfile } from "@/server/auth";
 import { db } from "@/server/db";
 import { isUniqueViolation } from "@/server/db/errors";
 import {
+  enforceRateLimit,
+  isRateLimited,
+  TOO_MANY_REQUESTS,
+} from "@/server/rate-limit";
+import {
   type AnswerSnapshot,
   application,
   post as postTable,
@@ -41,6 +46,9 @@ export async function applyToPost(
   if (!context) notFound();
   const { post, blocker } = context;
   if (blocker) return { formError: blocker.reason };
+  if (await isRateLimited("apply", viewer.id)) {
+    return { formError: TOO_MANY_REQUESTS };
+  }
 
   // 2. Read and check the input. Question answers arrive as fields named
   //    after each question's id; checkboxes may send several values.
@@ -124,6 +132,7 @@ export async function applyToPost(
 export async function withdrawApplication(applicationId: string) {
   const viewer = await requireProfile();
   if (!z.uuid().safeParse(applicationId).success) notFound();
+  await enforceRateLimit("write", viewer.id);
 
   await db.transaction(async (tx) => {
     // RETURNING gives back the deleted row, so we know whether anything

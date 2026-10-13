@@ -54,6 +54,11 @@ export function ProfileForm({ initial }: { initial: ProfileFormInput }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-8">
+      {state.formError && (
+        <p role="alert" className="text-sm text-red-600">
+          {state.formError}
+        </p>
+      )}
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-2 text-lg font-semibold">Public profile</legend>
         <p className="text-sm text-zinc-500">

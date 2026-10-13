@@ -9,6 +9,7 @@ import { db } from "@/server/db";
 import { isUniqueViolation } from "@/server/db/errors";
 import { profile, profilePrivate, profileSkill } from "@/server/db/schema";
 import { findOrCreateSkills } from "@/server/db/skills";
+import { isRateLimited, TOO_MANY_REQUESTS } from "@/server/rate-limit";
 
 import {
   onboardingSchema,
@@ -26,6 +27,9 @@ export async function createProfile(
   // 1. Who is asking? (Never trust the form for this.)
   const viewer = await requireViewer();
   if (viewer.username) redirect("/");
+  if (await isRateLimited("write", viewer.id)) {
+    return { error: TOO_MANY_REQUESTS };
+  }
 
   // 2. Is the input valid?
   const typed = String(formData.get("username") ?? "");
@@ -50,6 +54,7 @@ export async function createProfile(
 }
 
 export type ProfileFormState = {
+  formError?: string; // e.g. "doing that too often", shown at the top
   // What was typed, so the form keeps it after an error.
   values?: ProfileFormInput;
   fieldErrors?: Partial<Record<keyof ProfileFormInput, string[]>>;
@@ -84,6 +89,9 @@ export async function updateProfile(
     email: text("email"),
     discord: text("discord"),
   };
+  if (await isRateLimited("write", viewer.id)) {
+    return { values, formError: TOO_MANY_REQUESTS };
+  }
   const parsed = profileFormSchema.safeParse(values);
   if (!parsed.success) {
     return { values, fieldErrors: z.flattenError(parsed.error).fieldErrors };

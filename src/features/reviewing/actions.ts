@@ -10,6 +10,7 @@ import { statusChangeNotice } from "@/features/notifications/rules";
 import { requireProfile } from "@/server/auth";
 import { db } from "@/server/db";
 import { application, post, postRole } from "@/server/db/schema";
+import { enforceRateLimit } from "@/server/rate-limit";
 
 import { applicationStatusSchema } from "./schemas";
 
@@ -25,6 +26,7 @@ export async function setApplicationStatus(
   const id = z.uuid().safeParse(applicationId);
   const newStatus = applicationStatusSchema.safeParse(status);
   if (!id.success || !newStatus.success) notFound();
+  await enforceRateLimit("write", viewer.id);
 
   // The Accept form has an optional "also mark the role filled" checkbox.
   const fillRole =

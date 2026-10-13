@@ -9,6 +9,8 @@ import { PostTypeBadge } from "@/features/posts/components/post-type-badge";
 import { timeAgo } from "@/features/posts/components/time-ago";
 
 import { canManagePost } from "@/features/posts/rules";
+import { submitReport } from "@/features/safety/actions";
+import { ReportForm } from "@/features/safety/components/report-form";
 import { DURATIONS, LINKS, QUESTION_TYPES } from "@/lib/constants";
 import { requireProfile } from "@/server/auth";
 
@@ -189,6 +191,15 @@ async function Post({ params }: Pick<PageProps<"/posts/[id]">, "params">) {
             ))}
           </ol>
         </section>
+      )}
+
+      {!isOwner && (
+        <footer className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <ReportForm
+            label="Report this post"
+            action={submitReport.bind(null, { kind: "post", postId: post.id })}
+          />
+        </footer>
       )}
     </article>
   );

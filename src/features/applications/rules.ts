@@ -34,9 +34,11 @@ export function getApplyBlocker(
     id: string;
     links: Partial<Record<LinkKey, string | null>>;
     alreadyApplied: boolean;
+    blocked?: boolean; // a block either way between applicant and poster
   },
 ): ApplyBlocker | null {
   if (post.ownerId === applicant.id) return { reason: "This is your post." };
+  if (applicant.blocked) return { reason: "You can’t apply to this post." };
   if (applicant.alreadyApplied) {
     return { reason: "You’ve already applied to this project." };
   }

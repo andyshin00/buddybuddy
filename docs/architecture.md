@@ -15,7 +15,9 @@ src/
       schemas.ts                Zod schemas shared by forms + actions
       rules.ts                  pure business rules (unit tested)
       components/               UI used only by this feature
-    applications/  profiles/  notifications/   (same shape)
+    applications/  profiles/  notifications/  reviewing/   (same shape)
+    safety/                     blocking and reports
+    account/                    account deletion
   server/
     db/
       schema.ts                 Drizzle tables, enums, relations
@@ -23,10 +25,12 @@ src/
       migrations/               generated SQL — committed, never hand-edited
       seed.ts                   dev demo data
     auth.ts                     Better Auth config + getViewer()
+    rate-limit.ts               per-user limits on write actions (Postgres)
   proxy.ts                      redirects signed-out visitors (cookie check only)
   components/ui/                shadcn/ui components (we own this code)
   lib/                          small utils safe on client AND server
   env.ts                        Zod-validated environment variables
+e2e/                            Playwright browser tests (docs/hardening.md)
 ```
 
 ## Rules, and why
@@ -107,5 +111,8 @@ Write:  <form action={createPost}>
 | `post_question`                              | id, postId, position, type, label, required, options (jsonb)                                                           |                                 |
 | `application`                                | id, postId, applicantId, roleId, status, message, answers (jsonb snapshot), createdAt, updatedAt                       | **unique(postId, applicantId)** |
 | `notification`                               | id, userId, kind, text, link, readAt, createdAt                                                                        |                                 |
+| `block`                                      | blockerId, blockedId, createdAt                                                                                        | PK(blockerId, blockedId)        |
+| `report`                                     | id, reporterId, targetUserId, postId, reason, details, createdAt                                                       | Read in the Neon console        |
+| `rate_limit`                                 | key (e.g. `apply:u-sam`), windowStart, count                                                                           | No FK; see hardening.md         |
 
 **Why answers are a jsonb snapshot.** A poster may edit their questions after people have applied. If answers only pointed at question ids, old applications would show the wrong labels or lose answers. Storing `{ questionId, label, type, value }` keeps each application readable forever.
