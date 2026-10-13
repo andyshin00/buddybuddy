@@ -5,8 +5,7 @@
 // `dev` database in .env.local, never production.
 //
 // Real names, links and contact details go in profile_private (see
-// docs/privacy.md). Posts and applications are added here once their
-// tables exist.
+// docs/privacy.md). Posts, applications and notifications come after them.
 
 import "./load-env"; // must come first, see load-env.ts
 
@@ -16,6 +15,10 @@ import {
   QUESTION_TEMPLATES,
   type QuestionDraft,
 } from "@/features/posts/templates";
+import {
+  newApplicationNotice,
+  statusChangeNotice,
+} from "@/features/notifications/rules";
 import type {
   Duration,
   LinkKey,
@@ -26,6 +29,7 @@ import type {
 import { db } from "./index";
 import {
   application,
+  notification,
   post,
   postQuestion,
   postRole,
@@ -703,10 +707,38 @@ async function seed() {
         createdAt: appliedAt,
         updatedAt: appliedAt,
       });
+
+      // The notifications this would have sent. Pending ones are still
+      // unread for the poster; Sam's decision is unread for Sam, so both
+      // sides of the bell show a badge on first load.
+      const about = {
+        postId: target.id,
+        postTitle: title,
+        roleName: demo.role,
+      };
+      const applicantUsername = demoProfiles.find(
+        (d) => d.profile.userId === demo.applicant,
+      )!.profile.username;
+      const owner = demoPosts.find((p) => p.title === title)!.ownerId;
+      await tx.insert(notification).values({
+        userId: owner,
+        ...newApplicationNotice({ ...about, applicantUsername }),
+        readAt: demo.status === "pending" ? null : appliedAt,
+        createdAt: appliedAt,
+      });
+      if (demo.status !== "pending") {
+        const decidedAt = new Date(appliedAt.getTime() / 2 + Date.now() / 2);
+        await tx.insert(notification).values({
+          userId: demo.applicant,
+          ...statusChangeNotice({ ...about, status: demo.status }),
+          readAt: demo.applicant === "u-sam" ? null : decidedAt,
+          createdAt: decidedAt,
+        });
+      }
     }
 
     console.log(
-      `Seeded ${demoProfiles.length} profiles, ${demoPosts.length} posts, ${demoApplications.length} applications.`,
+      `Seeded ${demoProfiles.length} profiles, ${demoPosts.length} posts, ${demoApplications.length} applications, with notifications.`,
     );
   });
 }

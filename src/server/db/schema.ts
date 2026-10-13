@@ -359,3 +359,35 @@ export const application = pgTable(
     index("application_applicant_id_idx").on(t.applicantId),
   ],
 );
+
+// ---------------------------------------------------------------------------
+// Notifications: "Sam applied to your post", "You were accepted", ...
+// ---------------------------------------------------------------------------
+
+export const notificationKind = pgEnum("notification_kind", [
+  "new_application", // to the poster
+  "status_change", // to the applicant
+  "withdrawn", // to the poster
+]);
+
+export const notification = pgTable(
+  "notification",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    // Who it's for.
+    userId: text()
+      .notNull()
+      .references(() => profile.userId, { onDelete: "cascade" }),
+    kind: notificationKind().notNull(),
+    // The sentence is saved as it was, like application answers: if the
+    // post is renamed later, old notifications still make sense.
+    text: text().notNull(),
+    link: text().notNull(), // an in-app path, e.g. /applications
+    readAt: timestamp({ withTimezone: true }), // null = unread
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  // The header asks "this user's newest notifications" on every page.
+  (t) => [
+    index("notification_user_id_created_at_idx").on(t.userId, t.createdAt),
+  ],
+);

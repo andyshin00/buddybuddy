@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
+import { getNotifications } from "@/features/notifications/queries";
+import { timeAgo } from "@/features/posts/components/time-ago";
 import { getViewer } from "@/server/auth";
 
 import { signOut } from "../actions";
@@ -17,6 +20,8 @@ export async function UserMenu() {
     );
   }
 
+  const notifications = viewer.username ? await getNotifications(viewer) : null;
+
   return (
     <div className="flex items-center gap-4 text-sm">
       {viewer.username ? (
@@ -27,6 +32,20 @@ export async function UserMenu() {
           <Link href="/applications" className="hover:underline">
             My applications
           </Link>
+          {notifications && (
+            <NotificationBell
+              // A new notification or count gives a fresh bell (resets "seen").
+              key={`${notifications.unread}-${notifications.items[0]?.id}`}
+              unread={notifications.unread}
+              items={notifications.items.map((n) => ({
+                id: n.id,
+                text: n.text,
+                link: n.link,
+                unread: n.readAt === null,
+                ago: timeAgo(n.createdAt),
+              }))}
+            />
+          )}
           <Link
             href={`/u/${viewer.username}`}
             className="font-medium hover:underline"

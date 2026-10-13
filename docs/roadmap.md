@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M8 — Notifications
+- **Milestone:** M9 — Hardening
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -27,7 +27,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Application form builder: `post_question` table, question editor in the post form (add / remove / reorder, 5 types, required, choices), 4 templates. Explained in [posts.md](posts.md). **M5 complete.**
   - Applying: `application` table (answers saved with a copy of each question), `getApplyBlocker` + answer schema built from the questions (tested), apply page, "My applications" + withdraw, 10 demo applications. How it works: [applications.md](applications.md). **M6 complete.**
   - Reviewing: "My posts" with counts, owner-only applicants page (skill match, answers, tabs in the URL), accept / reject / back to pending in a transaction (optionally marking the role filled), contact details shown to both sides once accepted (`relationshipFrom`, tested), "projects posted / joined" on profiles. How it works: [reviewing.md](reviewing.md). **M7 complete.**
-- **Next step:** M8 in one PR: `notification` table + migration, notifications created inside the apply / withdraw / status-change actions (same transaction), navbar badge + dropdown, mark as read.
+  - Notifications: `notification` table, created by `notify()` inside the apply / withdraw / status-change transactions (not a Server Action, on purpose), the header bell with an unread badge and dropdown, opening it marks all read, demo notifications in the seed. How it works: [notifications.md](notifications.md). **M8 complete.**
+- **Next step:** M9 in one PR: Playwright E2E of the full flow in CI, `loading` / `error` / `not-found` pages, rate limiting on write actions, an accessibility pass, block / report and account deletion.
 
 ---
 
@@ -98,8 +99,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M8 — Notifications
 
-- [ ] Schema: `notification` + migration; created inside the M6/M7 actions (same transaction)
-- [ ] Navbar badge + dropdown, mark as read
+- [x] Schema: `notification` + migration; created inside the M6/M7 actions (same transaction)
+- [x] Navbar badge + dropdown, mark as read
 
 ## M9 — Hardening
 
