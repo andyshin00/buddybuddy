@@ -186,7 +186,7 @@ GitHub needs two apps because each one allows only **one** callback URL. Google 
    - **Application type:** Web application
    - **Name:** `BuddyBuddy`
    - **Authorized JavaScript origins:** add `http://localhost:3000` and `PROD`
-   - **Authorized redirect URIs:** add `http://localhost:3000/api/auth/callback/google` and `PROD/api/auth/callback/google`
+   - **Authorized redirect URIs:** add `  ` and `PROD/api/auth/callback/google`
    - Click **Create**.
 4. Copy the **Client ID** and **Client secret** into `.env.local` as `GOOGLE_CLIENT_ID=` and `GOOGLE_CLIENT_SECRET=`.
 5. Go to **Audience**. The app starts in **Testing** mode, where only listed **test users** can sign in. Either add your Google email under **Test users**, or click **Publish app** so anyone can sign in. (We only ask for name, email and picture, so Google doesn't need to review it.)

@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { StatusBadge } from "@/features/applications/components/status-badge";
+import { getApplyContext } from "@/features/applications/queries";
 import { setPostStatus } from "@/features/posts/actions";
 import { PostTypeBadge } from "@/features/posts/components/post-type-badge";
 import { timeAgo } from "@/features/posts/components/time-ago";
-import { getPost } from "@/features/posts/queries";
+
 import { canManagePost } from "@/features/posts/rules";
 import { DURATIONS, LINKS, QUESTION_TYPES } from "@/lib/constants";
 import { requireProfile } from "@/server/auth";
@@ -27,8 +29,9 @@ async function Post({ params }: Pick<PageProps<"/posts/[id]">, "params">) {
   const viewer = await requireProfile();
   const { id } = await params;
 
-  const post = await getPost(viewer, id);
-  if (!post) notFound();
+  const context = await getApplyContext(viewer, id);
+  if (!context) notFound();
+  const { post, myApplication, blocker } = context;
 
   const isOwner = canManagePost(viewer, post);
   const duration = DURATIONS.find((d) => d.value === post.duration)?.label;
@@ -78,6 +81,42 @@ async function Post({ params }: Pick<PageProps<"/posts/[id]">, "params">) {
           </form>
         </div>
       )}
+
+      {/* Everyone except the owner: apply, or see why they can't. */}
+      {!isOwner &&
+        (myApplication ? (
+          <p className="flex flex-wrap items-center gap-2 text-sm">
+            You applied <StatusBadge status={myApplication.status} />
+            <Link href="/applications" className="underline">
+              My applications
+            </Link>
+          </p>
+        ) : blocker ? (
+          <div className="flex flex-col gap-1 text-sm">
+            <button
+              type="button"
+              disabled
+              className="self-start rounded-md bg-zinc-900 px-4 py-2 font-medium text-white opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
+            >
+              Apply
+            </button>
+            <p className="text-zinc-500">
+              {blocker.reason}{" "}
+              {blocker.missingLinks && (
+                <Link href="/settings/profile" className="underline">
+                  Edit your profile
+                </Link>
+              )}
+            </p>
+          </div>
+        ) : (
+          <Link
+            href={`/posts/${post.id}/apply`}
+            className="self-start rounded-md bg-zinc-900 px-4 py-2 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            Apply
+          </Link>
+        ))}
 
       <p className="whitespace-pre-line">{post.description}</p>
 
