@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { type PrivateDetails, visiblePrivateDetails } from "./rules";
+import {
+  type ApplicationLink,
+  type PrivateDetails,
+  relationshipFrom,
+  visiblePrivateDetails,
+} from "./rules";
 
 // Maya's private details: GitHub is public, LinkedIn and portfolio are not.
 const maya: PrivateDetails = {
@@ -65,5 +70,55 @@ describe("visiblePrivateDetails", () => {
     const visible = visiblePrivateDetails("stranger", maya);
 
     expect(Object.keys(visible)).toEqual(["links"]);
+  });
+});
+
+describe("relationshipFrom", () => {
+  // Maya posted a project; Sam applied to it.
+  const samToMaya = (status: ApplicationLink["status"]): ApplicationLink => ({
+    applicantId: "u-sam",
+    ownerId: "u-maya",
+    status,
+  });
+
+  it("is self for your own profile", () => {
+    expect(relationshipFrom("u-maya", "u-maya", [])).toBe("self");
+  });
+
+  it("is stranger with no applications between them", () => {
+    expect(relationshipFrom("u-maya", "u-sam", [])).toBe("stranger");
+  });
+
+  it("makes the poster a reviewer of a pending or rejected applicant", () => {
+    expect(relationshipFrom("u-maya", "u-sam", [samToMaya("pending")])).toBe(
+      "reviewer",
+    );
+    expect(relationshipFrom("u-maya", "u-sam", [samToMaya("rejected")])).toBe(
+      "reviewer",
+    );
+  });
+
+  it("does not let the applicant review the poster", () => {
+    expect(relationshipFrom("u-sam", "u-maya", [samToMaya("pending")])).toBe(
+      "stranger",
+    );
+  });
+
+  it("makes both sides collaborators once accepted", () => {
+    expect(relationshipFrom("u-maya", "u-sam", [samToMaya("accepted")])).toBe(
+      "collaborator",
+    );
+    expect(relationshipFrom("u-sam", "u-maya", [samToMaya("accepted")])).toBe(
+      "collaborator",
+    );
+  });
+
+  it("ignores applications between other people", () => {
+    const other = {
+      applicantId: "u-leo",
+      ownerId: "u-maya",
+      status: "accepted",
+    } as const;
+    expect(relationshipFrom("u-sam", "u-maya", [other])).toBe("stranger");
   });
 });

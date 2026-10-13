@@ -1,10 +1,12 @@
 import "server-only";
 
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import type { Viewer } from "@/server/auth";
 import { db } from "@/server/db";
 import {
+  application,
+  post,
   profile,
   profilePrivate,
   profileSkill,
@@ -12,7 +14,8 @@ import {
 } from "@/server/db/schema";
 
 import {
-  type Relationship,
+  type ApplicationLink,
+  relationshipFrom,
   type VisiblePrivateDetails,
   visiblePrivateDetails,
 } from "./rules";
@@ -53,31 +56,101 @@ export async function getProfileByUsername(_viewer: Viewer, username: string) {
   return { ...row, skills: skills.map((s) => s.name) };
 }
 
-// How the viewer is related to `userId`. Collaborators and reviewers come
-// from applications, which arrive in M6/M7; until then everyone else is a
-// stranger, which is the safe default (they see the least).
-async function getRelationship(
+// The applications that connect the viewer with any of `userIds`, in
+// either direction. This is what decides "collaborator" and "reviewer".
+async function getApplicationLinks(
   viewer: Viewer,
-  userId: string,
-): Promise<Relationship> {
-  if (viewer.id === userId) return "self";
-  return "stranger";
+  userIds: string[],
+): Promise<ApplicationLink[]> {
+  return db
+    .select({
+      applicantId: application.applicantId,
+      ownerId: post.ownerId,
+      status: application.status,
+    })
+    .from(application)
+    .innerJoin(post, eq(post.id, application.postId))
+    .where(
+      or(
+        // They applied to the viewer's post...
+        and(
+          eq(post.ownerId, viewer.id),
+          inArray(application.applicantId, userIds),
+        ),
+        // ...or the viewer applied to theirs.
+        and(
+          eq(application.applicantId, viewer.id),
+          inArray(post.ownerId, userIds),
+        ),
+      ),
+    );
 }
 
-// The ONLY way to read profile_private. It returns just the fields this
-// viewer is allowed to see (rules in ./rules.ts, docs/privacy.md).
+// The ONLY way to read profile_private. For each user id, it returns just
+// the fields this viewer is allowed to see (rules in ./rules.ts,
+// docs/privacy.md). Users with no private details get `{ links: {} }`.
+// Works for a whole list at once, so a page of applicants is 2 queries.
+export async function getPrivateProfiles(
+  viewer: Viewer,
+  userIds: string[],
+): Promise<Map<string, VisiblePrivateDetails>> {
+  const result = new Map<string, VisiblePrivateDetails>();
+  if (userIds.length === 0) return result;
+
+  const [rows, links] = await Promise.all([
+    db
+      .select()
+      .from(profilePrivate)
+      .where(inArray(profilePrivate.userId, userIds)),
+    getApplicationLinks(viewer, userIds),
+  ]);
+
+  for (const userId of userIds) {
+    const details = rows.find((row) => row.userId === userId);
+    const relationship = relationshipFrom(viewer.id, userId, links);
+    result.set(
+      userId,
+      details ? visiblePrivateDetails(relationship, details) : { links: {} },
+    );
+  }
+  return result;
+}
+
+// The same, for one user.
 export async function getPrivateProfile(
   viewer: Viewer,
   userId: string,
 ): Promise<VisiblePrivateDetails> {
-  const [details] = await db
-    .select()
-    .from(profilePrivate)
-    .where(eq(profilePrivate.userId, userId));
-  if (!details) return { links: {} };
+  const all = await getPrivateProfiles(viewer, [userId]);
+  return all.get(userId) ?? { links: {} };
+}
 
-  const relationship = await getRelationship(viewer, userId);
-  return visiblePrivateDetails(relationship, details);
+// The projects on someone's profile: the ones they posted, and the ones
+// they joined (an accepted application). Visible to any signed-in user.
+export async function getProfileProjects(_viewer: Viewer, userId: string) {
+  const [posted, joined] = await Promise.all([
+    db
+      .select({ id: post.id, title: post.title, status: post.status })
+      .from(post)
+      .where(eq(post.ownerId, userId))
+      .orderBy(desc(post.createdAt)),
+    db
+      .select({
+        id: post.id,
+        title: post.title,
+        roleName: application.roleName,
+      })
+      .from(application)
+      .innerJoin(post, eq(post.id, application.postId))
+      .where(
+        and(
+          eq(application.applicantId, userId),
+          eq(application.status, "accepted"),
+        ),
+      )
+      .orderBy(desc(application.updatedAt)),
+  ]);
+  return { posted, joined };
 }
 
 // Everything the edit form needs, for the viewer's OWN profile only. There's

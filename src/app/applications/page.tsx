@@ -55,6 +55,19 @@ async function MyApplications() {
               {timeAgo(app.createdAt)}
               {app.postStatus === "closed" && " · post closed"}
             </p>
+            {app.ownerContact && (
+              <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                Contact @{app.ownerUsername}:{" "}
+                {[
+                  app.ownerContact.realName,
+                  app.ownerContact.email,
+                  app.ownerContact.discord &&
+                    `Discord ${app.ownerContact.discord}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "no contact details added yet"}
+              </p>
+            )}
           </div>
           <StatusBadge status={app.status} />
           {app.status === "pending" && (
