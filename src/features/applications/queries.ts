@@ -3,6 +3,7 @@ import "server-only";
 import { and, desc, eq } from "drizzle-orm";
 
 import { getPost } from "@/features/posts/queries";
+import { getPrivateProfiles } from "@/features/profiles/queries";
 import type { Viewer } from "@/server/auth";
 import { db } from "@/server/db";
 import { application, post, profile, profilePrivate } from "@/server/db/schema";
@@ -47,8 +48,10 @@ export async function getApplyContext(viewer: Viewer, postId: string) {
 }
 
 // "My applications": everything the viewer has applied to, newest first.
+// Accepted ones also carry the poster's contact details: you're now
+// collaborators, so the privacy gate lets you see them.
 export async function getMyApplications(viewer: Viewer) {
-  return db
+  const rows = await db
     .select({
       id: application.id,
       status: application.status,
@@ -57,6 +60,7 @@ export async function getMyApplications(viewer: Viewer) {
       postId: post.id,
       postTitle: post.title,
       postStatus: post.status,
+      ownerId: post.ownerId,
       ownerUsername: profile.username,
     })
     .from(application)
@@ -64,4 +68,17 @@ export async function getMyApplications(viewer: Viewer) {
     .innerJoin(profile, eq(profile.userId, post.ownerId))
     .where(eq(application.applicantId, viewer.id))
     .orderBy(desc(application.createdAt));
+
+  const acceptedBy = [
+    ...new Set(
+      rows.filter((r) => r.status === "accepted").map((r) => r.ownerId),
+    ),
+  ];
+  const contacts = await getPrivateProfiles(viewer, acceptedBy);
+
+  return rows.map((row) => ({
+    ...row,
+    ownerContact:
+      row.status === "accepted" ? contacts.get(row.ownerId) : undefined,
+  }));
 }

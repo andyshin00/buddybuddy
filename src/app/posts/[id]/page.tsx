@@ -63,7 +63,13 @@ async function Post({ params }: Pick<PageProps<"/posts/[id]">, "params">) {
       </header>
 
       {isOwner && (
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={`/posts/${post.id}/applicants`}
+            className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            Review applicants
+          </Link>
           <Link href={`/posts/${post.id}/edit`} className={buttonClass}>
             Edit
           </Link>

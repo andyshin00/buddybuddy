@@ -63,3 +63,33 @@ export function visiblePrivateDetails(
 
   return visible;
 }
+
+// One application that connects two people: `applicantId` applied to a
+// post owned by `ownerId`.
+export type ApplicationLink = {
+  applicantId: string;
+  ownerId: string;
+  status: "pending" | "accepted" | "rejected";
+};
+
+// How the viewer is related to `userId`, given the applications between
+// them (in either direction). Pure, so every branch is unit-tested.
+export function relationshipFrom(
+  viewerId: string,
+  userId: string,
+  links: ApplicationLink[],
+): Relationship {
+  if (viewerId === userId) return "self";
+  const between = links.filter(
+    (link) =>
+      (link.applicantId === userId && link.ownerId === viewerId) ||
+      (link.applicantId === viewerId && link.ownerId === userId),
+  );
+  // Accepted, in either direction: they're working together.
+  if (between.some((link) => link.status === "accepted")) {
+    return "collaborator";
+  }
+  // They applied to the viewer's post: the viewer is reviewing them.
+  if (between.some((link) => link.ownerId === viewerId)) return "reviewer";
+  return "stranger";
+}

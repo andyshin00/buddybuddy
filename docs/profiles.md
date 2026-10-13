@@ -32,11 +32,11 @@ This is **authorization**: deciding what someone is _allowed_ to see. It all hap
 | a reviewer     | ✗                         | all                             |
 | anyone else    | ✗                         | only the ones you marked public |
 
-- **Collaborator** = you have an accepted application together. **Reviewer** = you applied to their post. Both need applications, which arrive in M6–M7. Until then everyone except you counts as "anyone else", the safest default.
+- **Collaborator** = one of you accepted the other's application. **Reviewer** = they applied to your post, so you're reviewing them. Both are worked out from the `application` table by `relationshipFrom()` (also a pure function, also tested).
 - It's a **pure function**: it gets data in and returns data out, with no database. That makes it easy to test every row of the table above (`rules.test.ts`).
 - Fields the viewer can't see are **left out completely**, not hidden on the page. If something is in the HTML, anyone can read it with "View source".
 
-The page never reads `profile_private` directly. It calls `getPrivateProfile(viewer, userId)` in `queries.ts`, which loads the row, works out the relationship, and applies the rule.
+The page never reads `profile_private` directly. It calls `getPrivateProfile(viewer, userId)` in `queries.ts`, which loads the row, works out the relationship, and applies the rule. For a list of people (like the applicants page) there's `getPrivateProfiles(viewer, userIds)`, which does the same for everyone in 2 queries. They're the only two ways in.
 
 ## Saving the edit form
 

@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import {
   getPrivateProfile,
   getProfileByUsername,
+  getProfileProjects,
 } from "@/features/profiles/queries";
 import { EXPERIENCE_LEVELS, LINKS } from "@/lib/constants";
 import { requireProfile } from "@/server/auth";
@@ -34,7 +35,10 @@ async function Profile({ params }: Pick<PageProps<"/u/[username]">, "params">) {
   const name = person.displayName ?? person.username;
   const isYou = person.userId === viewer.id;
   // Only what this viewer is allowed to see (docs/privacy.md).
-  const details = await getPrivateProfile(viewer, person.userId);
+  const [details, projects] = await Promise.all([
+    getPrivateProfile(viewer, person.userId),
+    getProfileProjects(viewer, person.userId),
+  ]);
   const visibleLinks = LINKS.filter((link) => details.links[link.key]);
 
   return (
@@ -96,6 +100,44 @@ async function Profile({ params }: Pick<PageProps<"/u/[username]">, "params">) {
           </ul>
         ) : (
           <p className="text-sm text-zinc-500">No skills listed yet.</p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-2 font-medium">Projects posted</h2>
+        {projects.posted.length > 0 ? (
+          <ul className="flex flex-col gap-1 text-sm">
+            {projects.posted.map((p) => (
+              <li key={p.id}>
+                <Link href={`/posts/${p.id}`} className="underline">
+                  {p.title}
+                </Link>
+                {p.status === "closed" && (
+                  <span className="text-zinc-500"> (closed)</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-zinc-500">None yet.</p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-2 font-medium">Projects joined</h2>
+        {projects.joined.length > 0 ? (
+          <ul className="flex flex-col gap-1 text-sm">
+            {projects.joined.map((p) => (
+              <li key={p.id}>
+                <Link href={`/posts/${p.id}`} className="underline">
+                  {p.title}
+                </Link>{" "}
+                <span className="text-zinc-500">as {p.roleName}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-zinc-500">None yet.</p>
         )}
       </section>
 

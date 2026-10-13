@@ -1,6 +1,7 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { refresh } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -200,4 +201,28 @@ export async function setPostStatus(postId: string, status: "open" | "closed") {
     .where(eq(post.id, postId));
 
   redirect(`/posts/${postId}`);
+}
+
+// Mark one of the post's roles filled (or open again). Owner-only.
+// Bound by the applicants page: setRoleFilled.bind(null, postId, roleId, true).
+export async function setRoleFilled(
+  postId: string,
+  roleId: string,
+  filled: boolean,
+) {
+  const viewer = await requireProfile();
+  const parsed = z
+    .object({ roleId: z.uuid(), filled: z.boolean() })
+    .safeParse({ roleId, filled });
+  if (!parsed.success || !(await getOwnPost(viewer, postId))) notFound();
+
+  // `postId` in the WHERE too: a role id from another post matches nothing.
+  await db
+    .update(postRole)
+    .set({ filled: parsed.data.filled })
+    .where(
+      and(eq(postRole.id, parsed.data.roleId), eq(postRole.postId, postId)),
+    );
+
+  refresh();
 }

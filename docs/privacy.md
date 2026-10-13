@@ -22,7 +22,7 @@ Many users are students. A public page that combines a full name, school, timezo
 ## Enforcement (non-negotiable)
 
 - **Private fields live in `profile_private`, not `profile`.** Public queries never select from it.
-- **They're only read through `getPrivateProfile(viewer, userId)`.** It applies the rules above on the server and has unit tests for every branch.
+- **They're only read through `getPrivateProfile(viewer, userId)` (or `getPrivateProfiles` for a list).** It applies the rules above on the server and has unit tests for every branch.
 - **Never send a hidden field to the browser and hide it with CSS or conditionals.** If it's in the HTML or the JSON, it's public.
 - **Profiles and posts require sign-in**, and write actions are rate-limited, to slow down scraping.
 - **Only `https://` URLs are accepted** for links. This is validated on the server with Zod.

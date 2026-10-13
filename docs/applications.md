@@ -8,7 +8,7 @@ What we built in M6: applying to a post, and the "My applications" page.
 2. **Apply** opens `/posts/[id]/apply`: pick an open role, answer the post's questions, add an optional message.
 3. **Send application** saves it with status **pending** and takes you to **My applications** (`/applications`).
 4. While it's pending, you can **Withdraw** it. That deletes it, so you could apply again later.
-5. In M7 the poster will accept or reject it.
+5. The poster accepts or rejects it (see [reviewing.md](reviewing.md)). Once accepted, you see the poster's contact details right here.
 
 ## Who can apply: `getApplyBlocker()`
 

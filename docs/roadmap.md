@@ -4,7 +4,7 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## Current status
 
-- **Milestone:** M7 — Reviewing
+- **Milestone:** M8 — Notifications
 - **Done so far:**
   - Next.js scaffolded with `create-next-app`.
   - Project docs written.
@@ -26,7 +26,8 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
   - Posts: create / edit / close / reopen (owner-only, tested), post page, browse on `/` with URL filters turned into SQL, empty states, 8 demo posts. How it works: [posts.md](posts.md). **M4 complete.**
   - Application form builder: `post_question` table, question editor in the post form (add / remove / reorder, 5 types, required, choices), 4 templates. Explained in [posts.md](posts.md). **M5 complete.**
   - Applying: `application` table (answers saved with a copy of each question), `getApplyBlocker` + answer schema built from the questions (tested), apply page, "My applications" + withdraw, 10 demo applications. How it works: [applications.md](applications.md). **M6 complete.**
-- **Next step:** M7 in one PR: "My posts", the applicants page, accept / reject (with contact reveal), mark roles filled, "projects joined" on profiles.
+  - Reviewing: "My posts" with counts, owner-only applicants page (skill match, answers, tabs in the URL), accept / reject / back to pending in a transaction (optionally marking the role filled), contact details shown to both sides once accepted (`relationshipFrom`, tested), "projects posted / joined" on profiles. How it works: [reviewing.md](reviewing.md). **M7 complete.**
+- **Next step:** M8 in one PR: `notification` table + migration, notifications created inside the apply / withdraw / status-change actions (same transaction), navbar badge + dropdown, mark as read.
 
 ---
 
@@ -90,10 +91,10 @@ Each checkbox is roughly **one small PR**. Tick it in the PR that completes it, 
 
 ## M7 — Reviewing
 
-- [ ] "My posts" page with applicant counts
-- [ ] Applicants page: skill match, availability, links, answers (owner-only)
-- [ ] Accept / reject / back to pending in a transaction; contact reveal on accept
-- [ ] Mark role filled; show collaborators on profiles ("projects joined")
+- [x] "My posts" page with applicant counts
+- [x] Applicants page: skill match, availability, links, answers (owner-only)
+- [x] Accept / reject / back to pending in a transaction; contact reveal on accept
+- [x] Mark role filled; show collaborators on profiles ("projects joined")
 
 ## M8 — Notifications
 
