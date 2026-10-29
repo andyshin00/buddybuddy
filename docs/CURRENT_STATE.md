@@ -1,8 +1,8 @@
 # Current verified project state
 
 **Last updated:** 2026-10-28
-**Branch:** `main` (commits `bf05f34`, `f9a3113`). The sign-in page and the sign-out redirect fix are NOT committed yet.
-**Status:** Sign-up, sign-out and sign-in work. Server-side session reading and route protection are not built yet.
+**Branch:** `main` (commits `bf05f34`, `f9a3113`). Sign-in, dashboard session check and `proxy.ts` are NOT committed yet.
+**Status:** Auth basics done: sign-up, sign-in, sign-out, server-side session check and a route gate for `/dashboard`.
 
 ## Verified working
 - Neon + Drizzle using the WebSocket driver (`db/index.ts`: `drizzle-orm/neon-serverless` + `Pool`). Migration `drizzle/0000_grey_blink.sql` applied; tables `user`, `session`, `account`, `verification` exist in Neon.
@@ -13,22 +13,19 @@
   - `app/sign-up/page.tsx`: client form (controlled inputs) calling `authClient.signUp.email`.
   - `app/sign-in/page.tsx`: client form calling `authClient.signIn.email`; redirects to `/dashboard`.
   - `components/sign-out-button.tsx`: client component calling `authClient.signOut()` with error handling; redirects to `/sign-in`.
-  - `app/dashboard/page.tsx`: placeholder server component rendering `SignOutButton`.
-- Manually verified in the browser: sign-up, sign-out and sign-in work; sign-out deletes the `session` row, sign-in creates a new one.
-- `tsc --noEmit` and `eslint .` passed at the last run.
+  - `app/dashboard/page.tsx`: server component; `auth.api.getSession({ headers: await headers() })` inside a `<Suspense>` boundary (required by `cacheComponents: true`); redirects to `/sign-in` with no session; shows the user email and `SignOutButton`.
+  - `proxy.ts`: optimistic gate on `/dashboard/:path*` using `getSessionCookie` (cookie existence only); the page-level `getSession` is the real check.
+- Manually verified in the browser: sign-up, sign-out and sign-in work; sign-out deletes the `session` row, sign-in creates a new one; signed-out `/dashboard` redirects to `/sign-in`.
+- `tsc --noEmit`, `eslint .` and `next build` passed at the last run.
 
 ## Not done / known issues
-- `/dashboard` is not protected: it renders for signed-out users. No server-side session reading. No `proxy.ts` (Next 16 renamed `middleware` to `proxy`).
+- No automated tests yet (auth flows are verified manually only).
 - Signed-in users can still visit `/sign-in` and `/sign-up`.
 - No email verification (the product spec requires it later).
 - shadcn style/theme was not chosen deliberately.
 
 ## Next task
-BB-003, Better Auth tutorial **step 8: server session + protect `/dashboard`** (tutor mode).
-
-## For next session
-Read `CLAUDE.md`, this file, and `docs/BACKLOG.md`. Mode is **tutor**: the developer writes the code; give doc links and small steps, then review.
-- **8. Server session**: `auth.api.getSession({ headers: await headers() })` in the server `app/dashboard/page.tsx`, then protect `/dashboard` with `proxy.ts`. Read `node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md` (Next 16) before writing proxy code.
+BB-004, profiles with ownership rules (User A cannot edit B). Propose a task brief (see BACKLOG template) and pick tutor/pair/delegate before starting. Optional small follow-up: redirect signed-in users away from `/sign-in` and `/sign-up`.
 
 Rule to keep repeating: the browser uses `authClient`; server code uses `auth.api`.
 
