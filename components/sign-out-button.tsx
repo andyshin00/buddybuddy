@@ -23,7 +23,7 @@ export function SignOutButton() {
       return;
     }
 
-    router.push("/sign-up");
+    router.push("/sign-in");
   }
 
   return (
