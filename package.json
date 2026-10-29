@@ -11,7 +11,8 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate:test": "node --env-file=.env.test ./node_modules/drizzle-kit/bin.cjs migrate"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
